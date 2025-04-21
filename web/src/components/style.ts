@@ -1,0 +1,71 @@
+import { StyleSheet, Dimensions } from "react-native";
+
+export const style = StyleSheet.create({
+    menu: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: 345,
+        height: Dimensions.get("window").height,
+        backgroundColor: "rgb(255, 255, 255)",
+        left: 0,
+        top: 0,
+        position: "static",
+    },
+    logo: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: 'auto',
+        height: 120,
+    },
+    textoLogo: {
+        fontSize: 30,
+        fontWeight: "bold",
+        color: "#151D48",
+    },
+    botoes: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap : 20,
+        width: 'auto',
+    },
+    botaoMenu: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        width: 228,
+        padding: 24,
+        height: 26,
+        backgroundColor: "#1F48AA",
+        borderRadius: 8,
+        gap: 24,
+    },
+    textoBotaoMenu: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+    },
+    navBar:{
+        position: 'static',
+        top: 0,
+        right: 0,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 144,
+        backgroundColor: '#1F48AA',
+        width: '100%',
+        height: 120,
+    },
+    tituloNavBar: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    }
+});
+
