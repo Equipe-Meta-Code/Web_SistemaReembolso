@@ -1,0 +1,237 @@
+import React, { useState, useMemo } from 'react';
+import { View, StyleSheet, FlatList, Text } from 'react-native';
+import {
+    Card,
+    TextInput,
+    Button,
+    Title,
+    Searchbar,
+    List,
+    IconButton,
+    DataTable,
+} from 'react-native-paper';
+
+interface Category {
+    id: string;
+    name: string;
+}
+
+export default function Categorias() {
+    const [name, setName] = useState('');
+    const [search, setSearch] = useState('');
+    const [categories, setCategories] = useState<Category[]>([
+        { id: '01', name: 'Darlene Robertson' },
+        { id: '02', name: 'Theresa Cooper' },
+        { id: '03', name: 'Guy Hawkins' },
+        { id: '04', name: 'Robert Fox' },
+    ]);
+
+    // Filtra pela busca
+    const filtered = useMemo(() =>
+        categories.filter(cat =>
+            cat.name.toLowerCase().includes(search.toLowerCase())
+        ),
+        [search, categories]);
+
+    // Adicionar nova categoria
+    const addCategory = () => {
+        if (!name.trim()) return;
+        const nextId = (categories.length + 1).toString().padStart(2, '0');
+        setCategories([{ id: nextId, name }, ...categories]);
+        setName('');
+    };
+
+    // Remover categoria
+    const removeCategory = (id: string) => {
+        setCategories(categories.filter(cat => cat.id !== id));
+    };
+
+    // (Opcional) editar nome
+    const editCategory = (id: string) => {
+        const novoNome = prompt('Novo nome da categoria?');
+        if (novoNome) {
+            setCategories(categories.map(cat =>
+                cat.id === id ? { ...cat, name: novoNome } : cat
+            ));
+        }
+    };
+
+    return (
+        <View style={styles.container}>
+            <Card style={styles.formCard}>
+                <Card.Content>
+                    {/* Formulário de cadastro */}
+                    {/* <Title style={styles.label}>Nome da Categoria</Title> */}
+                    <View style={styles.row_top}>
+                        <View style={{ width: 600, backgroundColor: '#FFFFFF', borderRadius: 8 }}>
+                            <TextInput
+                                label="Nome da Categoria"
+                                value={name}
+                                onChangeText={setName}
+                                mode="outlined"
+                                activeOutlineColor="#1F48AA"
+                                contentStyle={{ height: 48 }}
+                                style={{ backgroundColor: '#FFFFFF' }}
+                            />
+                        </View>
+                        <Button
+                            mode="contained"
+                            onPress={addCategory}
+                            contentStyle={{ height: 48 }}
+                            style={styles.button}
+                        >
+                            Registrar Categoria
+                        </Button>
+                    </View>
+
+                    {/* Título e busca */}
+                    <View style={styles.row_bottom}>
+                        <Title style={styles.label}>Lista de Categorias</Title>
+                        <Searchbar
+                            placeholder="Search here..."
+                            value={search}
+                            onChangeText={setSearch}
+                            style={[styles.search, { backgroundColor: '#FAFAFA' }]}
+                        />
+                    </View>
+
+                    {/* Tabela de categorias */}
+                    <View style={styles.tableContainer}>
+                        <DataTable.Header style={styles.header}>
+                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
+                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
+                        </DataTable.Header>
+
+
+
+                        {filtered.map((item, idx) => (
+                            <DataTable.Row
+                                key={item.id}
+                                style={[
+                                    styles.row,
+                                    idx % 2 === 0 ? styles.rowEven : styles.rowOdd,
+                                ]}
+                            >
+                                <DataTable.Cell style={{ flex: 3 }}>
+                                    <Text numberOfLines={1} ellipsizeMode="tail">
+                                        {item.name}
+                                    </Text>
+                                </DataTable.Cell>
+                                <DataTable.Cell style={{ flex: 2 }}>
+                                    <View style={styles.actions}>
+                                        <IconButton
+                                            icon="delete-outline"
+                                            size={20}
+                                            onPress={() => removeCategory(item.id)}
+                                        />
+                                        <IconButton
+                                            icon="pencil-outline"
+                                            size={20}
+                                            onPress={() => editCategory(item.id)}
+                                        />
+                                    </View>
+                                </DataTable.Cell>
+                            </DataTable.Row>
+
+
+                        ))}
+
+                    </View>
+                </Card.Content>
+            </Card>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: 50,
+        backgroundColor: '#FFFFFF',
+    },
+    formCard: {
+        borderRadius: 12,
+        padding: 8,
+        backgroundColor: '#FFFFFF',
+    },
+    row_top: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        gap: 120,
+        marginBottom: 60,
+    },
+    input: {
+        width: 600,
+        borderRadius: 8,
+    },
+    button: {
+        borderRadius: 24,
+        width: 350,
+        backgroundColor: '#1F48AA',
+    },
+    label: {
+        fontSize: 22,
+        color: '#000000',
+        marginBottom: 8,
+        fontWeight: 'bold',
+    },
+    search: {
+        marginBottom: 8,
+    },
+    listItem: {
+        backgroundColor: '#FAFAFA',
+        marginBottom: 4,
+        borderRadius: 8,
+    },
+    row_bottom: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        gap: 120,
+        marginBottom: 30,
+    },
+
+
+    tableContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
+        width: 800,
+    },
+    header: {
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E9ECEF',
+    },
+    headerText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#A4A1A2',
+        textTransform: 'uppercase',
+    },
+    row: {
+        minHeight: 56,
+        alignItems: 'center',
+        paddingHorizontal: 16,
+    },
+    rowEven: { backgroundColor: '#FFFFFF' },
+    rowOdd: { backgroundColor: '#F8F9FC' },
+    name: {
+        fontSize: 16,
+        color: '#2C2C2C',
+    },
+    id: {
+        fontSize: 16,
+        color: '#6E6E6E',
+    },
+    actions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    iconButton: {
+        margin: 0,
+        padding: 4,
+    },
+});
