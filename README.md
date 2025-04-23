@@ -12,6 +12,11 @@
   ```bash
   npm install
   ```
+
+* Configurar o arquivo de API
+  * Acesse o arquivo [api.ts](./web/src/services/api.ts)
+  * Substitua ```<ip-da-sua-maquina>``` pelo IP correto da sua máquina.
+
 * Inicie o projeto web com o comando:
   ```bash
   npx expo start --web
