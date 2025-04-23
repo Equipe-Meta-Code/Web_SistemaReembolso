@@ -18,24 +18,28 @@ const Menu = () => {
             </View>
             <View style={style.botoes}>
 
-                <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
-                    <Ionicons name={'bag-handle-outline'} size={24} color={'#ffffff'}/>
+                <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Despesas")}>
+                    <Ionicons name={'list-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Lista de Despesas</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
+                    <Ionicons name={'person-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Funcionários</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
+                    <Ionicons name={'bag-handle-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Categorias</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
+                    <Ionicons name={'analytics-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Projetos</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
+                    <Ionicons name={'exit-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Departamento</Text>
                 </TouchableOpacity>
                 
