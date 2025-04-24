@@ -126,41 +126,26 @@ export default function Departamentos() {
           {/* Tabela de departamentos */}
           <View style={styles.tableContainer}>
             <DataTable.Header style={styles.header}>
-              <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>
-                DEPARTAMENTO
-              </DataTable.Title>
-              <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}> </DataTable.Title>
+              <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>DEPARTAMENTO</DataTable.Title>
+              <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
             </DataTable.Header>
 
             {filtered.map((dep, idx) => (
               <DataTable.Row
                 key={dep.id}
-                style={[
-                  styles.row,
-                  idx % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                ]}
+                style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
               >
-                <View style={styles.container_tabela}>
-                  <DataTable.Cell style={{ flex: 3 }}>
-                    <Text numberOfLines={1} ellipsizeMode="tail">
-                      {dep.name}
-                    </Text>
-                  </DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 2 }}>
-                    <View style={styles.actions}>
-                      <IconButton
-                        icon="delete-outline"
-                        size={20}
-                        onPress={() => removeDepartamento(dep.id)}
-                      />
-                      <IconButton
-                        icon="pencil-outline"
-                        size={20}
-                        onPress={() => editDepartamento(dep.id)}
-                      />
-                    </View>
-                  </DataTable.Cell>
-                </View>
+                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
+                  <Text numberOfLines={1} ellipsizeMode="tail">
+                    {dep.name}
+                  </Text>
+                </DataTable.Cell>
+                <DataTable.Cell style={{ flex: 2 }}>
+                  <View style={styles.actions}>
+                    <IconButton icon="delete-outline" size={20} onPress={() => removeDepartamento(dep.id)} />
+                    <IconButton icon="pencil-outline" size={20} onPress={() => editDepartamento(dep.id)} />
+                  </View>
+                </DataTable.Cell>
               </DataTable.Row>
             ))}
           </View>
@@ -224,7 +209,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E9ECEF',
-    width: 500,
+    width: 600,
   },
   header: {
     backgroundColor: '#FFFFFF',
@@ -241,6 +226,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
     alignItems: 'center',
     paddingHorizontal: 16,
+    flexDirection: 'row',
   },
   rowEven: { backgroundColor: '#FFFFFF' },
   rowOdd: { backgroundColor: '#F8F9FC' },

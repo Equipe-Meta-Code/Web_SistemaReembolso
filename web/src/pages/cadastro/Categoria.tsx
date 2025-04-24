@@ -21,6 +21,11 @@ export default function Categorias() {
     const [search, setSearch] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
 
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const from = page * rowsPerPage;
+    const to = Math.min((page + 1) * rowsPerPage, categories.length);
+
     // carrega e deduplica categorias
     useEffect(() => {
         api.get('/categorias')
@@ -85,6 +90,17 @@ export default function Categorias() {
             .catch(err => console.error('Erro ao editar categoria', err));
     };
 
+    const handleChangePage = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (newRowsPerPage: number) => {
+        setRowsPerPage(newRowsPerPage);
+        setPage(0);
+    };
+
+    const displayData = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
     return (
         <View style={styles.container}>
             <Card style={styles.formCard}>
@@ -126,45 +142,39 @@ export default function Categorias() {
                     {/* Tabela de categorias */}
                     <View style={styles.tableContainer}>
                         <DataTable.Header style={styles.header}>
-                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>
-                                NOME
-                            </DataTable.Title>
-                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>
-                                AÇÕES
-                            </DataTable.Title>
+                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
+                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
                         </DataTable.Header>
 
                         {filtered.map((item, idx) => (
                             <DataTable.Row
                                 key={item.id}
-                                style={[
-                                    styles.row,
-                                    idx % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                ]}
+                                style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                             >
-                                <View style={styles.container_tabela}>
-                                    <DataTable.Cell style={{ flex: 3 }}>
-                                        <Text numberOfLines={1} ellipsizeMode="tail">
-                                            {item.name}
-                                        </Text>
-                                    </DataTable.Cell>
-                                    <DataTable.Cell style={{ flex: 2 }}>
-                                        <View style={styles.actions}>
-                                            <IconButton
-                                                icon="delete-outline"
-                                                size={20}
-                                                onPress={() => removeCategory(item.id)}
-                                            />
-                                            <IconButton
-                                                icon="pencil-outline"
-                                                size={20}
-                                                onPress={() => editCategory(item.id)}
-                                            />
-                                        </View>
-                                    </DataTable.Cell>
-                                </View>
+                                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
+                                    <Text numberOfLines={1} ellipsizeMode="tail">
+                                        {item.name}
+                                    </Text>
+                                </DataTable.Cell>
+                                <DataTable.Cell style={{ flex: 2 }}>
+                                    <View style={styles.actions}>
+                                        <IconButton icon="delete-outline" size={20} onPress={() => removeCategory(item.id)} />
+                                        <IconButton icon="pencil-outline" size={20} onPress={() => editCategory(item.id)} />
+                                    </View>
+                                </DataTable.Cell>
                             </DataTable.Row>
                         ))}
+   {/*                      <DataTable.Pagination
+                            page={page}
+                            numberOfPages={Math.ceil(filtered.length / rowsPerPage)}
+                            onPageChange={p => setPage(p)}
+                            label={`${from + 1}-${to} de ${filtered.length}`}
+                            numberOfItemsPerPageList={[10, 25, 100]}
+                            numberOfItemsPerPage={rowsPerPage}
+                            onItemsPerPageChange={handleChangeRowsPerPage}
+                            showFastPaginationControls
+                        />
+ */}
                     </View>
                 </Card.Content>
             </Card>
@@ -242,6 +252,7 @@ const styles = StyleSheet.create({
         minHeight: 56,
         alignItems: 'center',
         paddingHorizontal: 16,
+        flexDirection: 'row',
     },
     rowEven: { backgroundColor: '#FFFFFF' },
     rowOdd: { backgroundColor: '#F8F9FC' },
@@ -260,10 +271,5 @@ const styles = StyleSheet.create({
     iconButton: {
         margin: 0,
         padding: 4,
-    },
-    container_tabela: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 200,
     },
 });
