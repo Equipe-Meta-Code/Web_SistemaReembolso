@@ -40,14 +40,14 @@ export const style = StyleSheet.create({
         width: 228,
         padding: 24,
         height: 26,
-        backgroundColor: "#1F48AA",
+        backgroundColor: "#FFFFFF",
         borderRadius: 8,
         gap: 24,
     },
     textoBotaoMenu: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#FFFFFF",
+        color: "rgb(0, 0, 0)",
     },
     navBar:{
         position: 'static',
