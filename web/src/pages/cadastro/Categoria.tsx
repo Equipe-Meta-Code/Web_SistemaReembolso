@@ -27,12 +27,12 @@ export default function Categorias() {
     const to = Math.min((page + 1) * rowsPerPage, categories.length);
 
     // carrega e deduplica categorias
-    useEffect(() => {
+    const fetchCategories = () => {
         api.get('/categorias')
             .then(({ data }) => {
                 const mapped: Category[] = data.map((d: any) => ({
                     id: d._id,
-                    name: d.nome,
+                    name: typeof d.nome === 'string' ? d.nome : '',
                 }));
                 const seen = new Set<string>();
                 const unique = mapped.filter(item => {
@@ -43,9 +43,13 @@ export default function Categorias() {
                 setCategories(unique);
             })
             .catch(err => console.error('Erro ao carregar categorias', err));
+    };
+    
+    useEffect(() => {
+        fetchCategories();
     }, []);
 
-    // Filtra pela busca
+    // Filtra pela busca com segurança
     const filtered = useMemo(
         () =>
             categories.filter(cat =>
@@ -54,39 +58,31 @@ export default function Categorias() {
         [search, categories]
     );
 
-    // Adicionar nova categoria no backend
+    // Adicionar nova categoria e recarregar
     const addCategory = () => {
         const trimmed = name.trim();
         if (!trimmed) return;
         api.post('/categorias', { nome: trimmed })
-            .then(({ data }) => {
-                setCategories(prev => [{ id: data._id, name: data.nome }, ...prev]);
+            .then(() => {
                 setName('');
+                fetchCategories();
             })
             .catch(err => console.error('Erro ao adicionar categoria', err));
     };
 
-    // Remover categoria no backend
+    // Remover categoria e recarregar
     const removeCategory = (id: string) => {
         api.delete(`/categorias/${id}`)
-            .then(() => {
-                setCategories(prev => prev.filter(cat => cat.id !== id));
-            })
+            .then(() => fetchCategories())
             .catch(err => console.error('Erro ao remover categoria', err));
     };
 
-    // Editar nome da categoria no backend
+    // Editar nome da categoria e recarregar
     const editCategory = (id: string) => {
         const novoNome = prompt('Novo nome da categoria?', '');
         if (!novoNome?.trim()) return;
         api.put(`/categorias/${id}`, { nome: novoNome.trim() })
-            .then(({ data }) => {
-                setCategories(prev =>
-                    prev.map(cat =>
-                        cat.id === id ? { id, name: data.nome } : cat
-                    )
-                );
-            })
+            .then(() => fetchCategories())
             .catch(err => console.error('Erro ao editar categoria', err));
     };
 
@@ -99,7 +95,7 @@ export default function Categorias() {
         setPage(0);
     };
 
-    const displayData = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    const displayData = filtered.slice(from, to);
 
     return (
         <View style={styles.container}>
@@ -146,7 +142,7 @@ export default function Categorias() {
                             <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
                         </DataTable.Header>
 
-                        {filtered.map((item, idx) => (
+                        {displayData.map((item, idx) => (
                             <DataTable.Row
                                 key={item.id}
                                 style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
@@ -164,17 +160,6 @@ export default function Categorias() {
                                 </DataTable.Cell>
                             </DataTable.Row>
                         ))}
-   {/*                      <DataTable.Pagination
-                            page={page}
-                            numberOfPages={Math.ceil(filtered.length / rowsPerPage)}
-                            onPageChange={p => setPage(p)}
-                            label={`${from + 1}-${to} de ${filtered.length}`}
-                            numberOfItemsPerPageList={[10, 25, 100]}
-                            numberOfItemsPerPage={rowsPerPage}
-                            onItemsPerPageChange={handleChangeRowsPerPage}
-                            showFastPaginationControls
-                        />
- */}
                     </View>
                 </Card.Content>
             </Card>
@@ -200,10 +185,6 @@ const styles = StyleSheet.create({
         gap: 120,
         marginBottom: 60,
     },
-    input: {
-        width: 600,
-        borderRadius: 8,
-    },
     button: {
         borderRadius: 24,
         width: 350,
@@ -217,11 +198,6 @@ const styles = StyleSheet.create({
     },
     search: {
         marginBottom: 8,
-    },
-    listItem: {
-        backgroundColor: '#FAFAFA',
-        marginBottom: 4,
-        borderRadius: 8,
     },
     row_bottom: {
         flexDirection: 'row',
@@ -260,16 +236,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#2C2C2C',
     },
-    id: {
-        fontSize: 16,
-        color: '#6E6E6E',
-    },
     actions: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-    },
-    iconButton: {
-        margin: 0,
-        padding: 4,
     },
 });
