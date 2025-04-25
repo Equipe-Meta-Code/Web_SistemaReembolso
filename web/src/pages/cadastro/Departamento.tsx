@@ -21,16 +21,16 @@ export default function Departamentos() {
   const [search, setSearch] = useState('');
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
 
-  // carrega e deduplica departamentos
-  useEffect(() => {
+  const fetchDepartamentos = () => {
     api.get('/departamentos')
       .then(({ data }) => {
         const mapped: Departamento[] = data.map((d: any) => ({
           id: d._id,
-          name: d.nome,
+          name: typeof d.nome === 'string' ? d.nome : '',
         }));
         const seen = new Set<string>();
         const unique = mapped.filter(dep => {
+          if (!dep.name) return false;
           if (seen.has(dep.name)) return false;
           seen.add(dep.name);
           return true;
@@ -38,6 +38,10 @@ export default function Departamentos() {
         setDepartamentos(unique);
       })
       .catch(err => console.error('Erro ao carregar departamentos', err));
+  };
+
+  useEffect(() => {
+    fetchDepartamentos();
   }, []);
 
   // filtra pela busca
@@ -49,39 +53,28 @@ export default function Departamentos() {
     [search, departamentos]
   );
 
-  // Adicionar nova categoria no backend
   const addDepartamento = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     api.post('/departamentos', { nome: trimmed })
-      .then(({ data }) => {
-        setDepartamentos(prev => [{ id: data._id, name: data.nome }, ...prev]);
+      .then(() => {
         setName('');
+        fetchDepartamentos();
       })
       .catch(err => console.error('Erro ao adicionar departamento', err));
   };
 
-  // remove um departamento
   const removeDepartamento = (id: string) => {
     api.delete(`/departamentos/${id}`)
-      .then(() => {
-        setDepartamentos(prev => prev.filter(dep => dep.id !== id));
-      })
+      .then(() => fetchDepartamentos())
       .catch(err => console.error('Erro ao remover departamento', err));
   };
 
-  // edita um departamento existente
   const editDepartamento = (id: string) => {
     const novoNome = prompt('Novo nome do departamento?', '');
     if (!novoNome?.trim()) return;
     api.put(`/departamentos/${id}`, { nome: novoNome.trim() })
-      .then(({ data }) => {
-        setDepartamentos(prev =>
-          prev.map(dep =>
-            dep.id === id ? { id, name: data.nome } : dep
-          )
-        );
-      })
+      .then(() => fetchDepartamentos())
       .catch(err => console.error('Erro ao editar departamento', err));
   };
 
@@ -174,10 +167,6 @@ const styles = StyleSheet.create({
     gap: 120,
     marginBottom: 60,
   },
-  input: {
-    width: 600,
-    borderRadius: 8,
-  },
   button: {
     borderRadius: 24,
     width: 350,
@@ -191,11 +180,6 @@ const styles = StyleSheet.create({
   },
   search: {
     marginBottom: 8,
-  },
-  listItem: {
-    backgroundColor: '#FAFAFA',
-    marginBottom: 4,
-    borderRadius: 8,
   },
   row_bottom: {
     flexDirection: 'row',
@@ -234,22 +218,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2C2C2C',
   },
-  id: {
-    fontSize: 16,
-    color: '#6E6E6E'
-  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-  },
-  iconButton: {
-    margin: 0,
-    padding: 4,
-  },
-  container_tabela: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 200,
-    marginLeft: 0,
   },
 });
