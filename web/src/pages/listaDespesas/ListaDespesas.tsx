@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 import Card from '../../components/listaDespesas/Card';
 import api from '../../services/api';
+import styles from './style';
 
 interface Pacote {
   _id: string;
@@ -81,6 +82,11 @@ const ListaDespesas: React.FC = () => {
   // 2) Carrega ao montar
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+  }, 3000);
+
+  return () => clearInterval(interval)
   }, []);
 
   // Utils
@@ -105,23 +111,29 @@ const ListaDespesas: React.FC = () => {
   }
 
   return (
-    <ScrollView>
+    <ScrollView style={styles.pagina}>
       {pacotes.map((pacote) => {
         const despesasRelacionadas = despesas.filter((d) =>
           pacote.despesas.includes(d.despesaId)
         );
-
+  
+        const projetoRelacionado = getProjeto(pacote.projetoId);
+        const usuarioRelacionado = getUsuario(pacote.userId);
+        const categoriaRelacionada = getCategoria(despesasRelacionadas[0]?.categoria ?? '');
+  
         return (
           <Card
             key={pacote._id}
             pacote={pacote}
-            despesas={despesasRelacionadas}
-            projeto={getProjeto(pacote.projetoId)}
-            categoria={getCategoria(despesasRelacionadas[0]?.categoria ?? '')}
-            usuario={getUsuario(pacote.userId)}
+            despesas={despesasRelacionadas.map((d) => ({
+              ...d,
+              categoria: getCategoria(d.categoria)?.nome ?? 'Sem categoria',
+            }))}
+            projeto={projetoRelacionado}
+            usuario={usuarioRelacionado}
             visivel={!!mostrarPacote[pacote._id]}
             alternarVisibilidade={() => alternarVisibilidade(pacote._id)}
-            onAprovacaoChange={fetchData}         // 3) Passa a função
+            onAprovacaoChange={fetchData}
           />
         );
       })}

@@ -90,4 +90,8 @@ export default StyleSheet.create({
   selectItemText: {
     fontSize: 14,
   },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+  },  
 });

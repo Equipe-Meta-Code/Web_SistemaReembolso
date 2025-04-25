@@ -17,12 +17,13 @@ const colors = {
 };
 
 interface Pacote   { _id: string; nome: string; }
-interface Despesa  {
+interface Despesa {
   _id: string;
   data: string;
   valor_gasto: number;
   descricao: string;
   aprovacao: string;
+  categoria: string;
 }
 interface Projeto  { nome: string; }
 interface Categoria{ nome: string; }
@@ -59,7 +60,7 @@ export default function Card({
   onAprovacaoChange,
 }: CardProps) {
   const { width } = useWindowDimensions();
-  const isWide = width >= 1130;
+  const isWide = width >= 1220;
   const [openDespesaId, setOpenDespesaId] = useState<string | null>(null);
 
   const toggleDropdown = (id: string) =>
@@ -69,7 +70,7 @@ export default function Card({
     try {
       await api.put(`/despesa/${id}`, { aprovacao: aprov });
       setOpenDespesaId(null);
-      onAprovacaoChange();   // 4) Recarrega a lista
+      onAprovacaoChange();
     } catch (err) {
       console.error('Erro ao atualizar aprovação:', err);
     }
@@ -82,7 +83,15 @@ export default function Card({
         onPress={alternarVisibilidade}
         activeOpacity={0.7}
       >
-        <Text style={styles.title}>{pacote.nome}</Text>
+        <View style={{ flexDirection: 'column', flex: 1 }}>
+          <Text style={styles.title}>{pacote.nome}</Text>
+          {usuario?.name && (
+            <Text style={styles.subtitle}>Funcionário: {usuario.name}</Text>
+          )}
+          {projeto?.nome && (
+            <Text style={styles.subtitle}>Projeto: {projeto.nome}</Text>
+          )}
+        </View>
         <Ionicons
           name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
           size={24}
@@ -94,11 +103,9 @@ export default function Card({
         <View style={isWide ? styles.tableContainer : styles.cardContainer}>
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={[styles.cell, styles.projeto]}>PROJETO</Text>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
               <Text style={[styles.cell, styles.data]}>DATA</Text>
               <Text style={[styles.cell, styles.valor]}>VALOR</Text>
-              <Text style={[styles.cell, styles.usuario]}>FUNCIONÁRIO</Text>
               <Text style={[styles.cell, styles.descricao]}>DESCRIÇÃO</Text>
               <Text style={[styles.cell, styles.aprovacao]}>APROVAÇÃO</Text>
             </View>
@@ -119,12 +126,9 @@ export default function Card({
                 key={d._id}
                 style={isWide ? styles.tableRow : styles.cardItem}
               >
-                <Text style={[styles.cell, styles.projeto]}>
-                  {projeto?.nome ?? '-'}
-                </Text>
                 <View style={[styles.cell, styles.categoria]}>
                   <Label
-                    text={categoria?.nome ?? '-'}
+                    text={d.categoria}
                     color={{ bg: '#e5e7ff', text: '#4c4ddc' }}
                   />
                 </View>
@@ -137,9 +141,6 @@ export default function Card({
                 </Text>
                 <Text style={[styles.cell, styles.valor]}>
                   R$ {d.valor_gasto.toFixed(2)}
-                </Text>
-                <Text style={[styles.cell, styles.usuario]}>
-                  {usuario?.name ?? '-'}
                 </Text>
                 <Text style={[styles.cell, styles.descricao]}>
                   {d.descricao}
