@@ -56,4 +56,45 @@ export default StyleSheet.create({
   descricao: {
     flex: 3,
   },
+
+  // new styles for commit 4
+  labelContainer: {
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignSelf: 'flex-start',
+  },
+  labelText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  aprovacao: {
+    flex: 1.5,
+  },
+  aprovacaoToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+  },
+  selectContainer: {
+    position: 'absolute',
+    top: 40,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    elevation: 4,
+    zIndex: 10,
+  },
+  selectItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  selectItemText: {
+    fontSize: 14,
+  },
 });
