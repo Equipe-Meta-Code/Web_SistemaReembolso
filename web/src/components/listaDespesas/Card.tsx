@@ -3,14 +3,19 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import styles from './style';
 
+interface Pacote { _id: string; nome: string; }
+interface Despesa { _id: string; descricao: string; }
+
 interface CardProps {
-  pacote: { _id: string; nome: string };
+  pacote: Pacote;
+  despesas: Despesa[];
   visivel: boolean;
   alternarVisibilidade: () => void;
 }
 
 export default function Card({
   pacote,
+  despesas,
   visivel,
   alternarVisibilidade,
 }: CardProps) {
@@ -31,7 +36,11 @@ export default function Card({
 
       {visivel && (
         <View style={styles.cardContainer}>
-          <Text>No expenses yet.</Text>
+          {despesas.map((d) => (
+            <View key={d._id} style={styles.cardItem}>
+              <Text>{d.descricao}</Text>
+            </View>
+          ))}
         </View>
       )}
     </View>
