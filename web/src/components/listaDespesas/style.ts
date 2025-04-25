@@ -47,17 +47,6 @@ export default StyleSheet.create({
     flex: 1,
     paddingHorizontal: 6,
   },
-  data: {
-    flex: 2,
-  },
-  valor: {
-    flex: 1.5,
-  },
-  descricao: {
-    flex: 3,
-  },
-
-  // new styles for commit 4
   labelContainer: {
     borderRadius: 20,
     paddingVertical: 6,
@@ -68,9 +57,13 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  aprovacao: {
-    flex: 1.5,
-  },
+  projeto: { flex: 2 },
+  categoria: { flex: 2 },
+  data: { flex: 2 },
+  valor: { flex: 1.5 },
+  usuario: { flex: 2 },
+  descricao: { flex: 3 },
+  aprovacao: { flex: 1.5 },
   aprovacaoToggle: {
     flexDirection: 'row',
     alignItems: 'center',
