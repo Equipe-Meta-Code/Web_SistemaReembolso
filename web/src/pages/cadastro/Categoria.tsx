@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, FlatList, Text } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import {
     Card,
     TextInput,
     Button,
     Title,
     Searchbar,
-    List,
     IconButton,
     DataTable,
 } from 'react-native-paper';
+import api from '../../services/api';
 
 interface Category {
     id: string;
@@ -19,49 +19,93 @@ interface Category {
 export default function Categorias() {
     const [name, setName] = useState('');
     const [search, setSearch] = useState('');
-    const [categories, setCategories] = useState<Category[]>([
-        { id: '01', name: 'Darlene Robertson' },
-        { id: '02', name: 'Theresa Cooper' },
-        { id: '03', name: 'Guy Hawkins' },
-        { id: '04', name: 'Robert Fox' },
-    ]);
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const from = page * rowsPerPage;
+    const to = Math.min((page + 1) * rowsPerPage, categories.length);
+
+    // carrega e deduplica categorias
+    useEffect(() => {
+        api.get('/categorias')
+            .then(({ data }) => {
+                const mapped: Category[] = data.map((d: any) => ({
+                    id: d._id,
+                    name: d.nome,
+                }));
+                const seen = new Set<string>();
+                const unique = mapped.filter(item => {
+                    if (seen.has(item.name)) return false;
+                    seen.add(item.name);
+                    return true;
+                });
+                setCategories(unique);
+            })
+            .catch(err => console.error('Erro ao carregar categorias', err));
+    }, []);
 
     // Filtra pela busca
-    const filtered = useMemo(() =>
-        categories.filter(cat =>
-            cat.name.toLowerCase().includes(search.toLowerCase())
-        ),
-        [search, categories]);
+    const filtered = useMemo(
+        () =>
+            categories.filter(cat =>
+                cat.name.toLowerCase().includes(search.toLowerCase())
+            ),
+        [search, categories]
+    );
 
-    // Adicionar nova categoria
+    // Adicionar nova categoria no backend
     const addCategory = () => {
-        if (!name.trim()) return;
-        const nextId = (categories.length + 1).toString().padStart(2, '0');
-        setCategories([{ id: nextId, name }, ...categories]);
-        setName('');
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        api.post('/categorias', { nome: trimmed })
+            .then(({ data }) => {
+                setCategories(prev => [{ id: data._id, name: data.nome }, ...prev]);
+                setName('');
+            })
+            .catch(err => console.error('Erro ao adicionar categoria', err));
     };
 
-    // Remover categoria
+    // Remover categoria no backend
     const removeCategory = (id: string) => {
-        setCategories(categories.filter(cat => cat.id !== id));
+        api.delete(`/categorias/${id}`)
+            .then(() => {
+                setCategories(prev => prev.filter(cat => cat.id !== id));
+            })
+            .catch(err => console.error('Erro ao remover categoria', err));
     };
 
-    // (Opcional) editar nome
+    // Editar nome da categoria no backend
     const editCategory = (id: string) => {
-        const novoNome = prompt('Novo nome da categoria?');
-        if (novoNome) {
-            setCategories(categories.map(cat =>
-                cat.id === id ? { ...cat, name: novoNome } : cat
-            ));
-        }
+        const novoNome = prompt('Novo nome da categoria?', '');
+        if (!novoNome?.trim()) return;
+        api.put(`/categorias/${id}`, { nome: novoNome.trim() })
+            .then(({ data }) => {
+                setCategories(prev =>
+                    prev.map(cat =>
+                        cat.id === id ? { id, name: data.nome } : cat
+                    )
+                );
+            })
+            .catch(err => console.error('Erro ao editar categoria', err));
     };
+
+    const handleChangePage = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (newRowsPerPage: number) => {
+        setRowsPerPage(newRowsPerPage);
+        setPage(0);
+    };
+
+    const displayData = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     return (
         <View style={styles.container}>
             <Card style={styles.formCard}>
                 <Card.Content>
                     {/* Formulário de cadastro */}
-                    {/* <Title style={styles.label}>Nome da Categoria</Title> */}
                     <View style={styles.row_top}>
                         <View style={{ width: 600, backgroundColor: '#FFFFFF', borderRadius: 8 }}>
                             <TextInput
@@ -102,40 +146,35 @@ export default function Categorias() {
                             <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
                         </DataTable.Header>
 
-
-
                         {filtered.map((item, idx) => (
                             <DataTable.Row
                                 key={item.id}
-                                style={[
-                                    styles.row,
-                                    idx % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                ]}
+                                style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                             >
-                                <DataTable.Cell style={{ flex: 3 }}>
+                                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
                                     <Text numberOfLines={1} ellipsizeMode="tail">
                                         {item.name}
                                     </Text>
                                 </DataTable.Cell>
                                 <DataTable.Cell style={{ flex: 2 }}>
                                     <View style={styles.actions}>
-                                        <IconButton
-                                            icon="delete-outline"
-                                            size={20}
-                                            onPress={() => removeCategory(item.id)}
-                                        />
-                                        <IconButton
-                                            icon="pencil-outline"
-                                            size={20}
-                                            onPress={() => editCategory(item.id)}
-                                        />
+                                        <IconButton icon="delete-outline" size={20} onPress={() => removeCategory(item.id)} />
+                                        <IconButton icon="pencil-outline" size={20} onPress={() => editCategory(item.id)} />
                                     </View>
                                 </DataTable.Cell>
                             </DataTable.Row>
-
-
                         ))}
-
+   {/*                      <DataTable.Pagination
+                            page={page}
+                            numberOfPages={Math.ceil(filtered.length / rowsPerPage)}
+                            onPageChange={p => setPage(p)}
+                            label={`${from + 1}-${to} de ${filtered.length}`}
+                            numberOfItemsPerPageList={[10, 25, 100]}
+                            numberOfItemsPerPage={rowsPerPage}
+                            onItemsPerPageChange={handleChangeRowsPerPage}
+                            showFastPaginationControls
+                        />
+ */}
                     </View>
                 </Card.Content>
             </Card>
@@ -191,14 +230,12 @@ const styles = StyleSheet.create({
         gap: 120,
         marginBottom: 30,
     },
-
-
     tableContainer: {
         borderRadius: 8,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#E9ECEF',
-        width: 800,
+        width: 600,
     },
     header: {
         backgroundColor: '#FFFFFF',
@@ -215,6 +252,7 @@ const styles = StyleSheet.create({
         minHeight: 56,
         alignItems: 'center',
         paddingHorizontal: 16,
+        flexDirection: 'row',
     },
     rowEven: { backgroundColor: '#FFFFFF' },
     rowOdd: { backgroundColor: '#F8F9FC' },
