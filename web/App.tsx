@@ -7,17 +7,27 @@ import { View } from 'react-native';
 
 export default function App() {
   const [filtro, setFiltro] = useState('');
-  const [titulo, setTitulo] = useState('Lista de Despesas'); // <- titulo inicial
+  const [titulo, setTitulo] = useState('Lista de Despesas');
+  const [showSearch, setShowSearch] = useState(true);
 
   return (
     <NavigationContainer>
       <View style={{ flexDirection: 'row', flex: 1 }}>
         <Menu />
         <View style={{ flex: 1 }}>
-          <Navbar onTextChange={setFiltro} titulo={titulo} />
-          <Routes filtro={filtro} setTitulo={setTitulo} />
+          <Navbar 
+            onTextChange={setFiltro} 
+            titulo={titulo} 
+            showSearch={showSearch} 
+          />
+          <Routes 
+            filtro={filtro} 
+            setTitulo={setTitulo} 
+            setShowSearch={setShowSearch} 
+          />
         </View>
       </View>
     </NavigationContainer>
   );
 }
+

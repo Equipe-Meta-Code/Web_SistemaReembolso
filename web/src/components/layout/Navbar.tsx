@@ -7,7 +7,13 @@ interface NavbarProps {
   titulo: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onTextChange, titulo }) => {
+interface NavbarProps {
+  onTextChange: (text: string) => void;
+  titulo: string;
+  showSearch: boolean;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onTextChange, titulo, showSearch }) => {
   const [texto, setTexto] = useState('');
 
   const handleTextChange = (newText: string) => {
@@ -18,14 +24,17 @@ const Navbar: React.FC<NavbarProps> = ({ onTextChange, titulo }) => {
   return (
     <View style={style.navBar}>
       <Text style={style.tituloNavBar}>{titulo}</Text>
-      <TextInput
-        style={style.inputNavbar}
-        placeholder="Buscar..."
-        value={texto}
-        onChangeText={handleTextChange}
-      />
+      {showSearch && (
+        <TextInput
+          style={style.inputNavbar}
+          placeholder="Buscar..."
+          value={texto}
+          onChangeText={handleTextChange}
+        />
+      )}
     </View>
   );
 };
+
 
 export default Navbar;
