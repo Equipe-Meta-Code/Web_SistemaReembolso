@@ -15,8 +15,12 @@ interface Departamento {
   id: string;
   name: string;
 }
+interface DepartamentosProps {
+  setTitulo: (titulo: string) => void;
+  setShowSearch: (show: boolean) => void;
+}
 
-export default function Departamentos() {
+export default function Departamentos({ setTitulo, setShowSearch }: DepartamentosProps) {
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
@@ -41,6 +45,8 @@ export default function Departamentos() {
   };
 
   useEffect(() => {
+    setTitulo('Departamentos');
+    setShowSearch(false);          
     fetchDepartamentos();
   }, []);
 

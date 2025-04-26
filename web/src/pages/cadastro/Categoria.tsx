@@ -16,7 +16,12 @@ interface Category {
     name: string;
 }
 
-export default function Categorias() {
+interface CategoriasProps {
+    setTitulo: (titulo: string) => void;
+    setShowSearch: (show: boolean) => void;
+}
+
+export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps) {
     const [name, setName] = useState('');
     const [search, setSearch] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
@@ -26,6 +31,11 @@ export default function Categorias() {
     const from = page * rowsPerPage;
     const to = Math.min((page + 1) * rowsPerPage, categories.length);
 
+    useEffect(() => {
+        setTitulo('Categorias');
+        setShowSearch(false);
+    }, []);
+    
     // carrega e deduplica categorias
     const fetchCategories = () => {
         api.get('/categorias')
