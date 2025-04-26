@@ -57,15 +57,23 @@ export const style = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        gap: 144,
+        gap: 100,
         backgroundColor: '#1F48AA',
         width: '100%',
         height: 120,
     },
     tituloNavBar: {
+        marginLeft: 30,
         fontSize: 36,
         fontWeight: 'bold',
         color: '#FFFFFF',
-    }
+    },
+    inputNavbar: {
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        width: 340,
+        borderRadius: 40,
+    },
 });
 
