@@ -33,7 +33,7 @@ const Menu = () => {
                     <Text style={style.textoBotaoMenu}>Categorias</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Categorias")}>
+                <TouchableOpacity style={style.botaoMenu} onPress={() => navigation.navigate("Projetos")}>
                     <Ionicons name={'analytics-outline'} size={24} color={'#ffffff'}/>
                     <Text style={style.textoBotaoMenu}>Projetos</Text>
                 </TouchableOpacity>
