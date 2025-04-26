@@ -5,12 +5,11 @@ export const style = StyleSheet.create({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: 345,
         height: Dimensions.get("window").height,
-        backgroundColor: "rgb(255, 255, 255)",
-        left: 0,
-        top: 0,
-        position: "static",
+        backgroundColor: "#FFFFFF",
+        position: "relative",
+        overflow: "visible",
+        zIndex: 1,
     },
     logo: {
         display: "flex",
@@ -24,12 +23,23 @@ export const style = StyleSheet.create({
         fontWeight: "bold",
         color: "#151D48",
     },
+    logoContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 20,
+      marginBottom: 20,
+      gap: 8,
+    },
+    logoImage: {
+      width: 32,
+      height: 32,
+    },
     botoes: {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        gap : 20,
+        gap: 20,
         width: 'auto',
     },
     botaoMenu: {
@@ -48,6 +58,15 @@ export const style = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         color: "rgb(0, 0, 0)",
+    },
+    botoesOcultos: {
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 10,
+        marginTop: 4,
+    },
+    botaoIcone: {
+        padding: 12,
     },
     navBar:{
         position: 'static',
@@ -75,5 +94,18 @@ export const style = StyleSheet.create({
         width: 340,
         borderRadius: 40,
     },
+    botaoOcultar: {
+        position: "absolute",
+        top: 120,
+        right: -12,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        padding: 4,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 2,
+        zIndex: 2,
+    },
 });
-
