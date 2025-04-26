@@ -18,13 +18,24 @@ interface Funcionario {
     createdAt: string;
 }
 
-export default function Funcionarios() {
+interface ListaFuncionariosProps {
+    filtro: string;
+    setTitulo: (titulo: string) => void;
+    setShowSearch: (show: boolean) => void;
+  }
+  
+  export default function Funcionarios({ setTitulo, filtro, setShowSearch }: ListaFuncionariosProps) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [search, setSearch] = useState('');
     const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
 
+    
+
     useEffect(() => {
+        setTitulo('Lista de Funcionários');
+        setShowSearch(true);  
+        
         api.get('/userList')
             .then(({ data }) => {
                 // Ajuste: acessar array de usuários dentro de data.users
@@ -46,14 +57,11 @@ export default function Funcionarios() {
             .catch(err => console.error('Erro ao carregar funcionários', err));
     }, []);
 
-    const filtered = useMemo(
-        () =>
-            funcionarios.filter(fun =>
-                fun.name.toLowerCase().includes(search.toLowerCase()) ||
-                fun.email.toLowerCase().includes(search.toLowerCase())
-            ),
-        [search, funcionarios]
-    );
+    const filtered = useMemo(() => {
+        return funcionarios.filter(fun =>
+            fun.name.toLowerCase().includes(filtro.toLowerCase())
+        );
+    }, [filtro, funcionarios]);    
 
     const removeFuncionario = (id: string) => {
         api.delete(`/users/${id}`)

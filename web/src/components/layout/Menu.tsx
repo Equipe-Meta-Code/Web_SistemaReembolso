@@ -20,7 +20,7 @@ const Menu = () => {
             </View>
             <View style={style.botoes}>
                 <BotaoMenu nomeBotao="Despesas" iconName="list-outline" onPress={() => navigation.navigate("Categorias")} />
-                <BotaoMenu nomeBotao="Funcionários" iconName="person-outline" onPress={() => navigation.navigate("Funcionarios")} />
+                <BotaoMenu nomeBotao="Funcionarios" iconName="person-outline" onPress={() => navigation.navigate("Funcionarios")} />
                 <BotaoMenu nomeBotao="Categorias" iconName="bag-handle-outline" onPress={() => navigation.navigate("Categorias")} />
                 <BotaoMenu nomeBotao="Projetos" iconName="analytics-outline" onPress={() => navigation.navigate("Projetos")} />
                 <BotaoMenu nomeBotao="Departamentos" iconName="exit-outline" onPress={() => navigation.navigate("Departamentos")} />

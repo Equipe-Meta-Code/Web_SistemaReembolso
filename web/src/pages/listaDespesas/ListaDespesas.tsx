@@ -44,8 +44,13 @@ interface Projeto {
   nome: string;
   projetoId?: number;
 }
+interface ListaDespesasProps {
+  filtro: string;
+  setTitulo: (titulo: string) => void;
+  setShowSearch: (show: boolean) => void;
+}
 
-const ListaDespesas: React.FC = () => {
+const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setShowSearch }) => {
   const [pacotes, setPacotes] = useState<Pacote[]>([]);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -53,7 +58,11 @@ const ListaDespesas: React.FC = () => {
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [mostrarPacote, setMostrarPacote] = useState<Record<string, boolean>>({});
 
-  // 1) Função de fetch em escopo para poder reaplicar após mudanças
+  useEffect(() => {
+    setTitulo('Lista de Despesas');
+    setShowSearch(false);
+  }, []);
+
   const fetchData = async () => {
     try {
       const [
@@ -80,7 +89,6 @@ const ListaDespesas: React.FC = () => {
     }
   };
 
-  // 2) Carrega ao montar
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => {
@@ -90,7 +98,6 @@ const ListaDespesas: React.FC = () => {
   return () => clearInterval(interval)
   }, []);
 
-  // Utils
   const getProjeto = (id: number) =>
     projetos.find((p) => p.projetoId === id);
 
@@ -111,9 +118,14 @@ const ListaDespesas: React.FC = () => {
     return <Text>Carregando pacotes...</Text>;
   }
 
+  const pacotesFiltrados = pacotes.filter((pacote) => 
+    pacote.nome.toLowerCase().includes(filtro.toLowerCase())
+  );
+
   return (
+
     <ScrollView style={styles.pagina}>
-      {pacotes.map((pacote) => {
+      {pacotesFiltrados.map((pacote) => {
         const despesasRelacionadas = despesas.filter((d) =>
           pacote.despesas.includes(d.despesaId)
         );
@@ -139,7 +151,9 @@ const ListaDespesas: React.FC = () => {
         );
       })}
     </ScrollView>
+
   );
+
 };
 
 export default ListaDespesas;
