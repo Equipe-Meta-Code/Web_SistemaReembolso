@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, FlatList, Text } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import {
     Card,
     TextInput,
     Button,
     Title,
     Searchbar,
-    List,
     IconButton,
     DataTable,
 } from 'react-native-paper';
+import api from '../../services/api';
 
 interface Category {
     id: string;
@@ -19,49 +19,89 @@ interface Category {
 export default function Categorias() {
     const [name, setName] = useState('');
     const [search, setSearch] = useState('');
-    const [categories, setCategories] = useState<Category[]>([
-        { id: '01', name: 'Darlene Robertson' },
-        { id: '02', name: 'Theresa Cooper' },
-        { id: '03', name: 'Guy Hawkins' },
-        { id: '04', name: 'Robert Fox' },
-    ]);
+    const [categories, setCategories] = useState<Category[]>([]);
 
-    // Filtra pela busca
-    const filtered = useMemo(() =>
-        categories.filter(cat =>
-            cat.name.toLowerCase().includes(search.toLowerCase())
-        ),
-        [search, categories]);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const from = page * rowsPerPage;
+    const to = Math.min((page + 1) * rowsPerPage, categories.length);
 
-    // Adicionar nova categoria
+    // carrega e deduplica categorias
+    const fetchCategories = () => {
+        api.get('/categorias')
+            .then(({ data }) => {
+                const mapped: Category[] = data.map((d: any) => ({
+                    id: d._id,
+                    name: typeof d.nome === 'string' ? d.nome : '',
+                }));
+                const seen = new Set<string>();
+                const unique = mapped.filter(item => {
+                    if (seen.has(item.name)) return false;
+                    seen.add(item.name);
+                    return true;
+                });
+                setCategories(unique);
+            })
+            .catch(err => console.error('Erro ao carregar categorias', err));
+    };
+    
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    // Filtra pela busca com segurança
+    const filtered = useMemo(
+        () =>
+            categories.filter(cat =>
+                cat.name.toLowerCase().includes(search.toLowerCase())
+            ),
+        [search, categories]
+    );
+
+    // Adicionar nova categoria e recarregar
     const addCategory = () => {
-        if (!name.trim()) return;
-        const nextId = (categories.length + 1).toString().padStart(2, '0');
-        setCategories([{ id: nextId, name }, ...categories]);
-        setName('');
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        api.post('/categorias', { nome: trimmed })
+            .then(() => {
+                setName('');
+                fetchCategories();
+            })
+            .catch(err => console.error('Erro ao adicionar categoria', err));
     };
 
-    // Remover categoria
+    // Remover categoria e recarregar
     const removeCategory = (id: string) => {
-        setCategories(categories.filter(cat => cat.id !== id));
+        api.delete(`/categorias/${id}`)
+            .then(() => fetchCategories())
+            .catch(err => console.error('Erro ao remover categoria', err));
     };
 
-    // (Opcional) editar nome
+    // Editar nome da categoria e recarregar
     const editCategory = (id: string) => {
-        const novoNome = prompt('Novo nome da categoria?');
-        if (novoNome) {
-            setCategories(categories.map(cat =>
-                cat.id === id ? { ...cat, name: novoNome } : cat
-            ));
-        }
+        const novoNome = prompt('Novo nome da categoria?', '');
+        if (!novoNome?.trim()) return;
+        api.put(`/categorias/${id}`, { nome: novoNome.trim() })
+            .then(() => fetchCategories())
+            .catch(err => console.error('Erro ao editar categoria', err));
     };
+
+    const handleChangePage = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (newRowsPerPage: number) => {
+        setRowsPerPage(newRowsPerPage);
+        setPage(0);
+    };
+
+    const displayData = filtered.slice(from, to);
 
     return (
         <View style={styles.container}>
             <Card style={styles.formCard}>
                 <Card.Content>
                     {/* Formulário de cadastro */}
-                    {/* <Title style={styles.label}>Nome da Categoria</Title> */}
                     <View style={styles.row_top}>
                         <View style={{ width: 600, backgroundColor: '#FFFFFF', borderRadius: 8 }}>
                             <TextInput
@@ -102,40 +142,24 @@ export default function Categorias() {
                             <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
                         </DataTable.Header>
 
-
-
-                        {filtered.map((item, idx) => (
+                        {displayData.map((item, idx) => (
                             <DataTable.Row
                                 key={item.id}
-                                style={[
-                                    styles.row,
-                                    idx % 2 === 0 ? styles.rowEven : styles.rowOdd,
-                                ]}
+                                style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                             >
-                                <DataTable.Cell style={{ flex: 3 }}>
+                                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
                                     <Text numberOfLines={1} ellipsizeMode="tail">
                                         {item.name}
                                     </Text>
                                 </DataTable.Cell>
                                 <DataTable.Cell style={{ flex: 2 }}>
                                     <View style={styles.actions}>
-                                        <IconButton
-                                            icon="delete-outline"
-                                            size={20}
-                                            onPress={() => removeCategory(item.id)}
-                                        />
-                                        <IconButton
-                                            icon="pencil-outline"
-                                            size={20}
-                                            onPress={() => editCategory(item.id)}
-                                        />
+                                        <IconButton icon="delete-outline" size={20} onPress={() => removeCategory(item.id)} />
+                                        <IconButton icon="pencil-outline" size={20} onPress={() => editCategory(item.id)} />
                                     </View>
                                 </DataTable.Cell>
                             </DataTable.Row>
-
-
                         ))}
-
                     </View>
                 </Card.Content>
             </Card>
@@ -161,10 +185,6 @@ const styles = StyleSheet.create({
         gap: 120,
         marginBottom: 60,
     },
-    input: {
-        width: 600,
-        borderRadius: 8,
-    },
     button: {
         borderRadius: 24,
         width: 350,
@@ -179,11 +199,6 @@ const styles = StyleSheet.create({
     search: {
         marginBottom: 8,
     },
-    listItem: {
-        backgroundColor: '#FAFAFA',
-        marginBottom: 4,
-        borderRadius: 8,
-    },
     row_bottom: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -191,14 +206,12 @@ const styles = StyleSheet.create({
         gap: 120,
         marginBottom: 30,
     },
-
-
     tableContainer: {
         borderRadius: 8,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#E9ECEF',
-        width: 800,
+        width: 600,
     },
     header: {
         backgroundColor: '#FFFFFF',
@@ -215,6 +228,7 @@ const styles = StyleSheet.create({
         minHeight: 56,
         alignItems: 'center',
         paddingHorizontal: 16,
+        flexDirection: 'row',
     },
     rowEven: { backgroundColor: '#FFFFFF' },
     rowOdd: { backgroundColor: '#F8F9FC' },
@@ -222,16 +236,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#2C2C2C',
     },
-    id: {
-        fontSize: 16,
-        color: '#6E6E6E',
-    },
     actions: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-    },
-    iconButton: {
-        margin: 0,
-        padding: 4,
     },
 });
