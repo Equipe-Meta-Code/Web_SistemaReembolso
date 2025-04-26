@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
@@ -16,7 +17,12 @@ const colors = {
   recusado: { bg: '#ffe5e5', text: '#c62828' },
 };
 
-interface Pacote   { _id: string; nome: string; }
+interface Pacote {
+  _id: string;
+  pacoteId: number;
+  nome: string;
+}
+
 interface Despesa {
   _id: string;
   data: string;
@@ -25,9 +31,10 @@ interface Despesa {
   aprovacao: string;
   categoria: string;
 }
-interface Projeto  { nome: string; }
-interface Categoria{ nome: string; }
-interface Usuario  { name: string; }
+
+interface Projeto { nome: string; }
+interface Categoria { nome: string; }
+interface Usuario { name: string; }
 
 interface CardProps {
   pacote: Pacote;
@@ -37,7 +44,7 @@ interface CardProps {
   usuario?: Usuario;
   visivel: boolean;
   alternarVisibilidade: () => void;
-  onAprovacaoChange: () => void;  // Nova prop
+  onAprovacaoChange: () => void;
 }
 
 const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({
@@ -76,6 +83,15 @@ export default function Card({
     }
   };
 
+  const updateStatusPacote = async (status: 'aprovado' | 'rejeitado') => {
+    try {
+      await api.put(`/pacote/${pacote.pacoteId}/status`, { status });
+      onAprovacaoChange();
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível atualizar o status do pacote.');
+    }
+  };
+
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity
@@ -99,6 +115,25 @@ export default function Card({
         />
       </TouchableOpacity>
 
+      <View style={styles.statusButtonsContainer}>
+        <TouchableOpacity
+          style={[styles.statusButton, { backgroundColor: '#d4f5e9' }]}
+          onPress={() => updateStatusPacote('aprovado')}
+        >
+          <Text style={[styles.statusButtonText, { color: '#2e7d32' }]}>
+            Aprovar
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.statusButton, { backgroundColor: '#ffe5e5' }]}
+          onPress={() => updateStatusPacote('rejeitado')}
+        >
+          <Text style={[styles.statusButtonText, { color: '#c62828' }]}>
+            Rejeitar
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {visivel && (
         <View style={isWide ? styles.tableContainer : styles.cardContainer}>
           {isWide && (
@@ -111,7 +146,6 @@ export default function Card({
             </View>
           )}
 
-          {/* Linhas de despesas */}
           {despesas.map((d) => {
             const label =
               d.aprovacao === 'Aprovado'
@@ -146,7 +180,6 @@ export default function Card({
                   {d.descricao}
                 </Text>
 
-                {/* Coluna de aprovação */}
                 <View style={[styles.cell, styles.aprovacao]}>
                   <View style={{ position: 'relative' }}>
                     <TouchableOpacity

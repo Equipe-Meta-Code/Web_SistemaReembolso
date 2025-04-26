@@ -7,6 +7,7 @@ import styles from './style';
 
 interface Pacote {
   _id: string;
+  pacoteId: number;
   nome: string;
   projetoId: number;
   userId: number;

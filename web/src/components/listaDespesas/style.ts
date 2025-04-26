@@ -94,4 +94,20 @@ export default StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },  
+  statusButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginBottom: 10,
+  },
+  statusButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  statusButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
 });
