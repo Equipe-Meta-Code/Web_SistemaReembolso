@@ -1,22 +1,30 @@
-// src/components/listaDespesas/Card.tsx
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
 import styles from './style';
 
 const colors = {
-  aprovado: { bg: '#d4f5e9', text: '#2e7d32' },
-  pendente: { bg: '#fff8e1', text: '#ff9800' },
-  recusado: { bg: '#ffe5e5', text: '#c62828' },
-};
+  aprovado:               { bg: '#d4f5e9',                     text: '#2e7d32' },
+  recusado:               { bg: '#ffe5e5',                     text: '#c62828' },
+  'aguardando aprovação': { bg: 'rgba(255, 188, 20, 0.21)',     text: 'rgba(214, 154, 1, 0.96)' },
+} as const;
 
-interface Pacote   { _id: string; nome: string; }
+type ColorKey = keyof typeof colors;
+
+interface Pacote {
+  _id: string;
+  pacoteId: number;
+  nome: string;
+  status: string;
+}
+
 interface Despesa {
   _id: string;
   data: string;
@@ -25,9 +33,10 @@ interface Despesa {
   aprovacao: string;
   categoria: string;
 }
-interface Projeto  { nome: string; }
-interface Categoria{ nome: string; }
-interface Usuario  { name: string; }
+
+interface Projeto { nome: string; }
+interface Categoria { nome: string; }
+interface Usuario { name: string; }
 
 interface CardProps {
   pacote: Pacote;
@@ -37,13 +46,10 @@ interface CardProps {
   usuario?: Usuario;
   visivel: boolean;
   alternarVisibilidade: () => void;
-  onAprovacaoChange: () => void;  // Nova prop
+  onAprovacaoChange: () => void;
 }
 
-const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({
-  text,
-  color,
-}) => (
+const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
   <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
   </View>
@@ -53,7 +59,6 @@ export default function Card({
   pacote,
   despesas,
   projeto,
-  categoria,
   usuario,
   visivel,
   alternarVisibilidade,
@@ -64,7 +69,7 @@ export default function Card({
   const [openDespesaId, setOpenDespesaId] = useState<string | null>(null);
 
   const toggleDropdown = (id: string) =>
-    setOpenDespesaId((prev) => (prev === id ? null : id));
+    setOpenDespesaId(prev => (prev === id ? null : id));
 
   const updateAprovacao = async (id: string, aprov: string) => {
     try {
@@ -76,6 +81,28 @@ export default function Card({
     }
   };
 
+  const updateStatusPacote = async (status: 'Aprovado' | 'Recusado') => {
+    try {
+      await api.put(`/pacote/${pacote.pacoteId}/status`, { status });
+      await Promise.all(
+        despesas.map(d => api.put(`/despesa/${d._id}`, { aprovacao: status }))
+      );
+      onAprovacaoChange();
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível atualizar o pacote ou suas despesas.');
+    }
+  };
+
+  const rawStatus = pacote.status.trim().toLowerCase();
+  const statusKey: ColorKey =
+    rawStatus === 'aprovado'
+      ? 'aprovado'
+      : rawStatus === 'recusado'
+      ? 'recusado'
+      : 'aguardando aprovação';
+  const statusColor = colors[statusKey];
+
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity
@@ -84,7 +111,10 @@ export default function Card({
         activeOpacity={0.7}
       >
         <View style={{ flexDirection: 'column', flex: 1 }}>
-          <Text style={styles.title}>{pacote.nome}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.title}>{pacote.nome}</Text>
+            <Label text={pacote.status} color={statusColor} />
+          </View>
           {usuario?.name && (
             <Text style={styles.subtitle}>Funcionário: {usuario.name}</Text>
           )}
@@ -92,15 +122,35 @@ export default function Card({
             <Text style={styles.subtitle}>Projeto: {projeto.nome}</Text>
           )}
         </View>
-        <Ionicons
-          name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
-          size={24}
-          color="#444"
-        />
+
+        <View style={styles.statusButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.statusButton, { backgroundColor: colors.aprovado.bg }]}
+            onPress={() => updateStatusPacote('Aprovado')}
+          >
+            <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>
+              Aprovar
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.statusButton, { backgroundColor: colors.recusado.bg }]}
+            onPress={() => updateStatusPacote('Recusado')}
+          >
+            <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>
+              Rejeitar
+            </Text>
+          </TouchableOpacity>
+          <Ionicons
+            name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
+            size={24}
+            color="#444"
+          />
+        </View>
       </TouchableOpacity>
 
       {visivel && (
         <View style={isWide ? styles.tableContainer : styles.cardContainer}>
+
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
@@ -111,26 +161,26 @@ export default function Card({
             </View>
           )}
 
-          {/* Linhas de despesas */}
-          {despesas.map((d) => {
+          {despesas.map(d => {
             const label =
               d.aprovacao === 'Aprovado'
                 ? 'Aprovado'
-                : d.aprovacao === 'Pendente'
-                ? 'Pendente'
-                : 'Recusado';
-            const color = colors[label.toLowerCase() as keyof typeof colors];
+                : d.aprovacao === 'Recusado'
+                ? 'Recusado'
+                : 'Pendente';
+            const key: ColorKey =
+              label === 'Aprovado'
+                ? 'aprovado'
+                : label === 'Recusado'
+                ? 'recusado'
+                : 'aguardando aprovação';
+
+            const color = colors[key];
 
             return (
-              <View
-                key={d._id}
-                style={isWide ? styles.tableRow : styles.cardItem}
-              >
+              <View key={d._id} style={isWide ? styles.tableRow : styles.cardItem}>
                 <View style={[styles.cell, styles.categoria]}>
-                  <Label
-                    text={d.categoria}
-                    color={{ bg: '#e5e7ff', text: '#4c4ddc' }}
-                  />
+                  <Label text={d.categoria} color={{ bg: '#e5e7ff', text: '#4c4ddc' }} />
                 </View>
                 <Text style={[styles.cell, styles.data]}>
                   {new Date(d.data).toLocaleDateString('pt-BR', {
@@ -139,14 +189,9 @@ export default function Card({
                     year: 'numeric',
                   })}
                 </Text>
-                <Text style={[styles.cell, styles.valor]}>
-                  R$ {d.valor_gasto.toFixed(2)}
-                </Text>
-                <Text style={[styles.cell, styles.descricao]}>
-                  {d.descricao}
-                </Text>
+                <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
+                <Text style={[styles.cell, styles.descricao]}>{d.descricao}</Text>
 
-                {/* Coluna de aprovação */}
                 <View style={[styles.cell, styles.aprovacao]}>
                   <View style={{ position: 'relative' }}>
                     <TouchableOpacity
@@ -161,10 +206,9 @@ export default function Card({
                         style={{ marginLeft: 4 }}
                       />
                     </TouchableOpacity>
-
                     {openDespesaId === d._id && (
                       <View style={styles.selectContainer}>
-                        {['Aprovado', 'Pendente', 'Recusado'].map((opt) => (
+                        {['Aprovado', 'Pendente', 'Recusado'].map(opt => (
                           <TouchableOpacity
                             key={opt}
                             style={styles.selectItem}
@@ -174,9 +218,11 @@ export default function Card({
                               style={[
                                 styles.selectItemText,
                                 {
-                                  color:
-                                    colors[opt.toLowerCase() as keyof typeof colors]
-                                      .text,
+                                  color: colors[
+                                    opt === 'Pendente'
+                                      ? 'aguardando aprovação'
+                                      : (opt.toLowerCase() as ColorKey)
+                                  ].text,
                                 },
                               ]}
                             >
