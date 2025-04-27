@@ -101,26 +101,23 @@ export default function Funcionarios({ setTitulo, filtro, setShowSearch }: Lista
     return (
         <View style={styles.container}>
             <Card style={styles.formCard}>
-                <Card.Content>
-                    <View style={{ height: '80%' }}>
-                        <ScrollView>
-                            <DataTable style={styles.tableContainer}>
-                                <DataTable.Header style={styles.header}>
-                                    <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
-                                    <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>ID</DataTable.Title>
-                                    <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>EMAIL</DataTable.Title>
-                                    <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>CRIAÇÃO</DataTable.Title>
-                                    {/* <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title> */}
-                                </DataTable.Header>
-
+                <Card.Content style={{ flex: 1, paddingBottom: 16 }}>
+                    <DataTable style={styles.tableContainer}>
+                        <DataTable.Header style={styles.header}>
+                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
+                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>ID</DataTable.Title>
+                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>EMAIL</DataTable.Title>
+                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>CRIAÇÃO</DataTable.Title>
+                        </DataTable.Header>
+                        <View style={{ flex: 1, maxHeight: 650 }}>
+                            <ScrollView>
                                 {filtered.map((item, idx) => (
                                     <DataTable.Row
                                         key={item.id}
                                         style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                                     >
-
-                                        <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
-                                            <Text numberOfLines={1} ellipsizeMode="tail">
+                                        <DataTable.Cell style={{ flex: 3 }}>
+                                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.name}>
                                                 {item.name}
                                             </Text>
                                         </DataTable.Cell>
@@ -133,17 +130,11 @@ export default function Funcionarios({ setTitulo, filtro, setShowSearch }: Lista
                                         <DataTable.Cell style={{ flex: 2 }}>
                                             <Text style={styles.name}>{new Date(item.createdAt).toLocaleDateString()}</Text>
                                         </DataTable.Cell>
-                                        {/* <DataTable.Cell style={{ flex: 2 }}>
-                                    <View style={styles.actions}>
-                                        <IconButton icon="delete-outline" size={20} style={styles.iconButton} onPress={() => removeFuncionario(item.id)} />
-                                        <IconButton icon="pencil-outline" size={20} style={styles.iconButton} onPress={() => editFuncionario(item.id)} />
-                                    </View>
-                                </DataTable.Cell> */}
                                     </DataTable.Row>
                                 ))}
-                            </DataTable>
-                        </ScrollView>
-                    </View>
+                            </ScrollView>
+                        </View>
+                    </DataTable>
                 </Card.Content>
             </Card>
         </View>
