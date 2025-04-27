@@ -50,7 +50,7 @@ interface CardProps {
 }
 
 const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
-  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>
+  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>  
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
   </View>
 );
@@ -104,7 +104,12 @@ export default function Card({
   const statusColor = colors[statusKey];
 
   return (
-    <View style={styles.wrapper}>
+    <View
+      style={[
+        styles.wrapper,
+        { overflow: 'visible', zIndex: openDespesaId ? 1000 : 0, elevation: openDespesaId ? 20 : 0 },
+      ]}
+    >
       <TouchableOpacity
         style={styles.header}
         onPress={alternarVisibilidade}
@@ -128,17 +133,13 @@ export default function Card({
             style={[styles.statusButton, { backgroundColor: colors.aprovado.bg }]}
             onPress={() => updateStatusPacote('Aprovado')}
           >
-            <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>
-              Aprovar
-            </Text>
+            <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>Aprovar</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.statusButton, { backgroundColor: colors.recusado.bg }]}
             onPress={() => updateStatusPacote('Recusado')}
           >
-            <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>
-              Rejeitar
-            </Text>
+            <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>Rejeitar</Text>
           </TouchableOpacity>
           <Ionicons
             name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
@@ -149,8 +150,7 @@ export default function Card({
       </TouchableOpacity>
 
       {visivel && (
-        <View style={isWide ? styles.tableContainer : styles.cardContainer}>
-
+        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>  
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
@@ -174,7 +174,6 @@ export default function Card({
                 : label === 'Recusado'
                 ? 'recusado'
                 : 'aguardando aprovação';
-
             const color = colors[key];
 
             return (
@@ -184,9 +183,7 @@ export default function Card({
                 </View>
                 <Text style={[styles.cell, styles.data]}>
                   {new Date(d.data).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
+                    day: 'numeric', month: 'long', year: 'numeric'
                   })}
                 </Text>
                 <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
@@ -207,25 +204,14 @@ export default function Card({
                       />
                     </TouchableOpacity>
                     {openDespesaId === d._id && (
-                      <View style={styles.selectContainer}>
-                        {['Aprovado', 'Pendente', 'Recusado'].map(opt => (
+                      <View style={[styles.selectContainer, { position: 'absolute', top: 30, right: 0, zIndex: 1001, elevation: 25 }]}>  
+                        {['Aprovado', 'Recusado'].map(opt => (
                           <TouchableOpacity
                             key={opt}
                             style={styles.selectItem}
                             onPress={() => updateAprovacao(d._id, opt)}
                           >
-                            <Text
-                              style={[
-                                styles.selectItemText,
-                                {
-                                  color: colors[
-                                    opt === 'Pendente'
-                                      ? 'aguardando aprovação'
-                                      : (opt.toLowerCase() as ColorKey)
-                                  ].text,
-                                },
-                              ]}
-                            >
+                            <Text style={[styles.selectItemText, { color: colors[opt.toLowerCase() as ColorKey].text }]}>
                               {opt}
                             </Text>
                           </TouchableOpacity>

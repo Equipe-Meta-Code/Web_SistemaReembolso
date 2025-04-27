@@ -11,7 +11,7 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const MENU_ITEMS: { name: keyof RootStackParamList; icon: string; label: string }[] = [
   { name: "Despesas",    icon: "list-outline",       label: "Despesas" },
-  { name: "Funcionarios", icon: "person-outline",     label: "Funcionários" },
+  { name: "Funcionarios", icon: "person-outline",     label: "Funcionarios" },
   { name: "Categorias",  icon: "bag-handle-outline", label: "Categorias" },
   { name: "Projetos",    icon: "analytics-outline",  label: "Projetos" },
   { name: "Departamentos", icon: "exit-outline",     label: "Departamentos" },
