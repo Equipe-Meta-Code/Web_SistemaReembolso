@@ -106,6 +106,63 @@ export default function CadastroProjetos() {
         }).start();
     };
 
+    const handleSubmit = async () => {
+        if (
+            !nomeProjeto ||
+            !descricao ||
+            !departamentoId ||
+            categoriasInput.some((c) => !c.categoriaId || !c.valorMaximo) ||
+            funcionariosInput.some((f) => !f)
+        ) {
+            Alert.alert('Atenção', 'Preencha todos os campos antes de cadastrar.');
+            return;
+        }
+
+        const categorias = categoriasInput.map((c) => {
+            const cat = listaCategorias.find((x) => x.categoriaId === c.categoriaId);
+            return {
+                categoriaId: c.categoriaId,
+                nome: cat?.nome || 'Desconhecida',
+                valor_maximo: parseFloat(c.valorMaximo),
+            };
+        });
+        const departamentos = [
+            {
+                departamentoId,
+                nome:
+                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
+                        ?.nome ?? 'Desconhecido',
+            },
+        ];
+        const funcionarios = funcionariosInput.map((idStr) => {
+            const userId = Number(idStr);
+            const f = listaFuncionarios.find((x) => x.userId === userId);
+            return {
+                userId,
+                name: f?.name || 'Desconhecido',
+            };
+        });
+
+        try {
+            await api.post('/projeto', {
+                nome: nomeProjeto,
+                descricao,
+                categorias,
+                departamentos,
+                funcionarios,
+            });
+            Alert.alert('Sucesso', 'Projeto cadastrado com sucesso!');
+            setNomeProjeto('');
+            setDescricao('');
+            setDepartamentoId('');
+            setCategoriasInput([{ categoriaId: '', valorMaximo: '' }]);
+            setFuncionariosInput(['']);
+        } catch (error) {
+            console.error('Erro ao cadastrar projeto:', error);
+            Alert.alert('Erro', 'Não foi possível cadastrar o projeto.');
+        }
+    };
+
     return (
         <ScrollView style={{ flex: 1, backgroundColor: '#ffffff' }}>
             <View style={styles.container}>
@@ -255,7 +312,7 @@ export default function CadastroProjetos() {
                             <Pressable
                                 onPressIn={handlePressIn}
                                 onPressOut={handlePressOut}
-                                onPress={() => console.log('Projeto Cadastrado')}
+                                onPress={handleSubmit}
                                 style={{ marginTop: 24 }}
                             >
                                 <Animated.View style={[styles.cadastrarButton, { transform: [{ scale }] }]}>
