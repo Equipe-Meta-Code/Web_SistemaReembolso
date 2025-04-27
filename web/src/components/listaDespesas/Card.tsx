@@ -68,6 +68,9 @@ export default function Card({
   const isWide = width >= 1220;
   const [openDespesaId, setOpenDespesaId] = useState<string | null>(null);
 
+  // calcula o total de todas as despesas deste pacote
+  const valorTotal = despesas.reduce((acc, d) => acc + d.valor_gasto, 0);
+
   const toggleDropdown = (id: string) =>
     setOpenDespesaId(prev => (prev === id ? null : id));
 
@@ -108,9 +111,7 @@ export default function Card({
       ? colors.aprovado.text
       : rawStatus === 'recusado'
       ? colors.recusado.text
-      : rawStatus === 'aguardando aprovação'
-      ? colors['aguardando aprovação'].text
-      : 'orange';
+      : colors['aguardando aprovação'].text;
 
   return (
     <View
@@ -125,7 +126,7 @@ export default function Card({
         activeOpacity={0.7}
       >
         <View style={{ flexDirection: 'column', flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <Text style={styles.title}>{pacote.nome}</Text>
             {/* <Label text={pacote.status} color={statusColor} /> */}
             <View style={styles.statusButtonsContainer}>
@@ -160,12 +161,14 @@ export default function Card({
               {projeto.nome}
             </Text>
           )}
-          {pacote?.status && (
-            <Text style={styles.subtitle}>
-              <Text style={{ fontWeight: 'bold' }}>Status: </Text>
-              <Text style={{ color: statusTextColor }}>{pacote.status}</Text>
-            </Text>
-          )}
+          <Text style={styles.subtitle}>
+            <Text style={{ fontWeight: 'bold' }}>Valor Total: </Text>
+            <Text>R$ {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+          </Text>
+          <Text style={styles.subtitle}>
+            <Text style={{ fontWeight: 'bold' }}>Status: </Text>
+            <Text style={{ color: statusTextColor }}>{pacote.status}</Text>
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -225,6 +228,7 @@ export default function Card({
                     </TouchableOpacity>
                     {openDespesaId === d._id && (
                       <View style={[styles.selectContainer, { position: 'absolute', top: 30, right: 0, zIndex: 1001, elevation: 25 }]}>  
+
                         {['Aprovado', 'Recusado'].map(opt => (
                           <TouchableOpacity
                             key={opt}
