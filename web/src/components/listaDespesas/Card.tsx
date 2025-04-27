@@ -10,13 +10,32 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
 import styles from './style';
 
-const colors = {
+// Mapeamento de cores por categoria
+const categoriaCoresFundo: Record<string, string> = { 
+  'Alimentação': 'rgba(234, 234, 255, 0.8)',
+  'Hospedagem': 'rgba(3, 46, 31, 0.07)',
+  'Transporte': 'rgba(52, 163, 238, 0.1)',
+  'Serviços Terceirizados': 'rgba(90, 128, 19, 0.1)',
+  'Materiais': 'rgba(255, 109, 211, 0.06)',
+  'Outros': 'rgba(97, 97, 97, 0.1)',
+};    
+
+const categoriaCoresTexto: Record<string, string> = { 
+  'Alimentação': 'rgba(58, 8, 196, 0.63)',
+  'Hospedagem': 'rgba(6, 58, 40, 0.65)',
+  'Transporte': 'rgba(19, 75, 165, 0.67)',
+  'Serviços Terceirizados': 'rgba(50, 70, 13, 0.5)',
+  'Materiais': 'rgba(160, 3, 95, 0.69)',
+  'Outros': 'rgba(54, 52, 52, 0.5)',
+};
+
+const statusColors = {
   aprovado:               { bg: '#d4f5e9',                     text: '#2e7d32' },
   recusado:               { bg: '#ffe5e5',                     text: '#c62828' },
   'aguardando aprovação': { bg: 'rgba(255, 188, 20, 0.21)',     text: 'rgba(214, 154, 1, 0.96)' },
 } as const;
 
-type ColorKey = keyof typeof colors;
+type StatusKey = keyof typeof statusColors;
 
 interface Pacote {
   _id: string;
@@ -98,20 +117,20 @@ export default function Card({
   };
 
   const rawStatus = pacote.status.trim().toLowerCase();
-  const statusKey: ColorKey =
+  const statusKey: StatusKey =
     rawStatus === 'aprovado'
       ? 'aprovado'
       : rawStatus === 'recusado'
       ? 'recusado'
       : 'aguardando aprovação';
-  const statusColor = colors[statusKey];
+  const pacoteColor = statusColors[statusKey];
 
   const statusTextColor =
     rawStatus === 'aprovado'
-      ? colors.aprovado.text
+      ? statusColors.aprovado.text
       : rawStatus === 'recusado'
-      ? colors.recusado.text
-      : colors['aguardando aprovação'].text;
+      ? statusColors.recusado.text
+      : statusColors['aguardando aprovação'].text;
 
   return (
     <View
@@ -128,19 +147,18 @@ export default function Card({
         <View style={{ flexDirection: 'column', flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <Text style={styles.title}>{pacote.nome}</Text>
-            {/* <Label text={pacote.status} color={statusColor} /> */}
             <View style={styles.statusButtonsContainer}>
               <TouchableOpacity
-                style={[styles.statusButton, { backgroundColor: colors.aprovado.bg }]}
+                style={[styles.statusButton, { backgroundColor: statusColors.aprovado.bg }]}
                 onPress={() => updateStatusPacote('Aprovado')}
               >
-                <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>Aprovar</Text>
+                <Text style={[styles.statusButtonText, { color: statusColors.aprovado.text }]}>Aprovar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.statusButton, { backgroundColor: colors.recusado.bg }]}
+                style={[styles.statusButton, { backgroundColor: statusColors.recusado.bg }]}
                 onPress={() => updateStatusPacote('Recusado')}
               >
-                <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>Rejeitar</Text>
+                <Text style={[styles.statusButtonText, { color: statusColors.recusado.text }]}>Rejeitar</Text>
               </TouchableOpacity>
               <Ionicons
                 name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
@@ -191,18 +209,22 @@ export default function Card({
                 : d.aprovacao === 'Recusado'
                 ? 'Recusado'
                 : 'Pendente';
-            const key: ColorKey =
+            const key: StatusKey =
               label === 'Aprovado'
                 ? 'aprovado'
                 : label === 'Recusado'
                 ? 'recusado'
                 : 'aguardando aprovação';
-            const color = colors[key];
+            const aprovColor = statusColors[key];
+
+            // Cores dinâmicas por categoria
+            const bgCategoria = categoriaCoresFundo[d.categoria] || 'rgba(229, 231, 255, 1)';
+            const textCategoria = categoriaCoresTexto[d.categoria] || 'rgba(76, 77, 220, 1)';
 
             return (
               <View key={d._id} style={isWide ? styles.tableRow : styles.cardItem}>
                 <View style={[styles.cell, styles.categoria]}>
-                  <Label text={d.categoria} color={{ bg: '#e5e7ff', text: '#4c4ddc' }} />
+                  <Label text={d.categoria} color={{ bg: bgCategoria, text: textCategoria }} />
                 </View>
                 <Text style={[styles.cell, styles.data]}>
                   {new Date(d.data).toLocaleDateString('pt-BR', {
@@ -219,7 +241,7 @@ export default function Card({
                       onPress={() => toggleDropdown(d._id)}
                       activeOpacity={0.7}
                     >
-                      <Label text={label} color={color} />
+                      <Label text={label} color={aprovColor} />
                       <Ionicons
                         name="chevron-down-outline"
                         size={16}
@@ -235,7 +257,7 @@ export default function Card({
                             style={styles.selectItem}
                             onPress={() => updateAprovacao(d._id, opt)}
                           >
-                            <Text style={[styles.selectItemText, { color: colors[opt.toLowerCase() as ColorKey].text }]}>
+                            <Text style={[styles.selectItemText, { color: statusColors[opt.toLowerCase() as StatusKey].text }]}>
                               {opt}
                             </Text>
                           </TouchableOpacity>
