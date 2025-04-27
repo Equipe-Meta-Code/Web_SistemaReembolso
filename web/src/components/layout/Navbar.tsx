@@ -5,11 +5,6 @@ import { style } from './style';
 interface NavbarProps {
   onTextChange: (text: string) => void;
   titulo: string;
-}
-
-interface NavbarProps {
-  onTextChange: (text: string) => void;
-  titulo: string;
   showSearch: boolean;
 }
 

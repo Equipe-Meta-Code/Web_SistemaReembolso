@@ -6,6 +6,7 @@ import ListaDespesas from '../pages/listaDespesas/ListaDespesas';
 import ListaFuncionarios from '../pages/listaFuncionarios/Funcionarios';
 import Departamentos from '../pages/cadastro/Departamento';
 import { RootStackParamList } from './navigation.d';
+import Projetos from '../pages/projetos/Projetos';
 
 interface RoutesProps {
   filtro: string;
@@ -43,7 +44,6 @@ export function Routes({ filtro, setTitulo, setShowSearch }: RoutesProps) {
       <Stack.Screen name="Departamentos">
         {() => <Departamentos setTitulo={setTitulo} setShowSearch={setShowSearch} />}
       </Stack.Screen>
-
     </Stack.Navigator>
   );
-}
+};
