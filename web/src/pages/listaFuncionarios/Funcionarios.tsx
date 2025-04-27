@@ -102,16 +102,6 @@ export default function Funcionarios({ setTitulo, filtro, setShowSearch }: Lista
         <View style={styles.container}>
             <Card style={styles.formCard}>
                 <Card.Content>
-                    <View style={styles.row_bottom}>
-                        <Title style={styles.label}>Lista de Funcionários</Title>
-                        <Searchbar
-                            placeholder="Buscar..."
-                            value={search}
-                            onChangeText={setSearch}
-                            style={[styles.search, { backgroundColor: '#FAFAFA' }]}
-                        />
-                    </View>
-
                     <View style={{ height: '80%' }}>
                         <ScrollView>
                             <DataTable style={styles.tableContainer}>
@@ -171,26 +161,10 @@ const styles = StyleSheet.create({
         padding: 8,
         backgroundColor: '#FFFFFF',
     },
-    label: {
-        fontSize: 22,
-        color: '#000000',
-        marginBottom: 8,
-        fontWeight: 'bold',
-    },
-    search: {
-        marginBottom: 8,
-    },
     listItem: {
         backgroundColor: '#FAFAFA',
         marginBottom: 4,
         borderRadius: 8,
-    },
-    row_bottom: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4,
-        gap: 120,
-        marginBottom: 30,
     },
     tableContainer: {
         borderRadius: 8,
