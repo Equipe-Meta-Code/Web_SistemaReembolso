@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Animated, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Animated, Pressable, Alert } from 'react-native';
 import {
     Card,
     TextInput,
@@ -8,44 +8,86 @@ import {
     IconButton,
     Button,
 } from 'react-native-paper';
-import { red } from 'react-native-reanimated/lib/typescript/Colors';
+import api from '../../services/api';
+
+interface Categoria {
+  _id: string;
+  categoriaId: string;
+  nome: string;
+}
+
+interface Departamento {
+  _id: string;
+  departamentoId: string;
+  nome: string;
+}
+
+interface Funcionario {
+  _id: string;
+  userId: number;
+  name: string;
+}
 
 export default function CadastroProjetos() {
     const [nomeProjeto, setNomeProjeto] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [departamento, setDepartamento] = useState('');
-    const [categorias, setCategorias] = useState([{ categoria: '', valorMaximo: '' }]);
-    const [funcionarios, setFuncionarios] = useState(['']);
+    const [departamentoId, setDepartamentoId] = useState('');
+    const [categoriasInput, setCategoriasInput] = useState<{ categoriaId: string; valorMaximo: string }[]>([{ categoriaId: '', valorMaximo: '' }]);
+    const [funcionariosInput, setFuncionariosInput] = useState<string[]>(['']);
     const [expandedDepartamento, setExpandedDepartamento] = useState(false);
     const [expandedCategorias, setExpandedCategorias] = useState<number | null>(null);
     const [expandedFuncionarios, setExpandedFuncionarios] = useState<number | null>(null);
 
+    const [listaDepartamentos, setListaDepartamentos] = useState<Departamento[]>([]);
+    const [listaCategorias, setListaCategorias] = useState<Categoria[]>([]);
+    const [listaFuncionarios, setListaFuncionarios] = useState<Funcionario[]>([]);
+
     const scale = useState(new Animated.Value(1))[0];
 
-    const listaDepartamentos = ['Financeiro', 'Tecnologia', 'Marketing'];
-    const listaCategorias = ['Alimentação', 'Hospedagem', 'Viagem'];
-    const listaFuncionarios = ['Ana Silva', 'Bruno Costa', 'Carlos Souza', 'Daniela Lima', 'Eduardo Alves', 'Fernanda Rocha'];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [catRes, depRes, funcRes] = await Promise.all([
+                    api.get<Categoria[]>('/categorias'),
+                    api.get<Departamento[]>('/departamentos'),
+                    api.get<{ users: Funcionario[] }>('/userList'),
+                ]);
+                setListaCategorias(catRes.data);
+                setListaDepartamentos(depRes.data);
+                setListaFuncionarios(funcRes.data.users);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                Alert.alert('Erro', 'Não foi possível carregar dados iniciais.');
+            }
+        };
+        fetchData();
+    }, []);
 
-    const valorTotal = categorias.reduce((total, item) => total + (parseFloat(item.valorMaximo) || 0), 0);
+    const valorTotal = categoriasInput.reduce(
+        (total, item) => total + (parseFloat(item.valorMaximo) || 0),
+        0
+    );
 
-    const adicionarCategoria = () => {
-        setCategorias([...categorias, { categoria: '', valorMaximo: '' }]);
+    const adicionarCategoria = () =>
+        setCategoriasInput([...categoriasInput, { categoriaId: '', valorMaximo: '' }]);
+
+    const atualizarCategoria = (
+        index: number,
+        campo: 'categoriaId' | 'valorMaximo',
+        valor: string
+    ) => {
+        const arr = [...categoriasInput];
+        (arr[index] as any)[campo] = valor;
+        setCategoriasInput(arr);
     };
 
-    const atualizarCategoria = (index: number, campo: 'categoria' | 'valorMaximo', valor: string) => {
-        const novasCategorias = [...categorias];
-        novasCategorias[index][campo] = valor;
-        setCategorias(novasCategorias);
-    };
+    const adicionarFuncionario = () =>
+        setFuncionariosInput([...funcionariosInput, '']);
 
-    const adicionarFuncionario = () => {
-        setFuncionarios([...funcionarios, '']);
-    };
-
-    const atualizarFuncionario = (index: number, value: string) => {
-        const novosFuncionarios = [...funcionarios];
-        novosFuncionarios[index] = value;
-        setFuncionarios(novosFuncionarios);
+    const atualizarFuncionario = (index: number, valor: string) => {
+        const arr = [...funcionariosInput];
+        arr[index] = valor;
+        setFuncionariosInput(arr);
     };
 
     const handlePressIn = () => {
@@ -73,7 +115,7 @@ export default function CadastroProjetos() {
                         <View style={styles.leftSide}>
                             <Title style={styles.selectTitle}>Nome do Projeto</Title>
                             <TextInput
-                                label=""
+                                label="Digite o nome do Projeto"
                                 value={nomeProjeto}
                                 onChangeText={setNomeProjeto}
                                 style={styles.input}
@@ -81,7 +123,7 @@ export default function CadastroProjetos() {
                             />
                             <Title style={styles.selectTitle}>Descrição</Title>
                             <TextInput
-                                label=""
+                                label="Digite a descrição do Projeto"
                                 value={descricao}
                                 onChangeText={setDescricao}
                                 style={styles.input}
@@ -90,17 +132,20 @@ export default function CadastroProjetos() {
 
                             <Title style={styles.selectTitle}>Departamento</Title>
                             <List.Accordion
-                                title={departamento || "Escolha o Departamento"}
+                                title={
+                                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
+                                        ?.nome || 'Escolha o Departamento'
+                                }
                                 style={styles.field}
                                 expanded={expandedDepartamento}
                                 onPress={() => setExpandedDepartamento(!expandedDepartamento)}
                             >
-                                {listaDepartamentos.map((dep, index) => (
+                                {listaDepartamentos.map((d) => (
                                     <List.Item
-                                        key={index}
-                                        title={dep}
+                                        key={d._id}
+                                        title={d.nome}
                                         onPress={() => {
-                                            setDepartamento(dep);
+                                            setDepartamentoId(d.departamentoId);
                                             setExpandedDepartamento(false);
                                         }}
                                     />
@@ -108,21 +153,32 @@ export default function CadastroProjetos() {
                             </List.Accordion>
 
                             <Title style={styles.selectTitle}>Categorias e Valor Máximo (R$)</Title>
-                            {categorias.map((item, index) => (
-                                <View key={index} style={styles.categoriaContainer}>
+                            {categoriasInput.map((item, idx) => (
+                                <View key={idx} style={styles.categoriaContainer}>
                                     <View style={{ flex: 1 }}>
                                         <List.Accordion
-                                            title={item.categoria || "Escolha a Categoria"}
+                                            title={
+                                                listaCategorias.find((c) => c.categoriaId === item.categoriaId)
+                                                    ?.nome || 'Escolha a Categoria'
+                                            }
                                             style={styles.field}
-                                            expanded={expandedCategorias === index}
-                                            onPress={() => setExpandedCategorias(expandedCategorias === index ? null : index)}
+                                            expanded={expandedCategorias === idx}
+                                            onPress={() =>
+                                                setExpandedCategorias(
+                                                    expandedCategorias === idx ? null : idx
+                                                )
+                                            }
                                         >
-                                            {listaCategorias.map((cat, idx) => (
+                                            {listaCategorias.map((c) => (
                                                 <List.Item
-                                                    key={idx}
-                                                    title={cat}
+                                                    key={c._id}
+                                                    title={c.nome}
                                                     onPress={() => {
-                                                        atualizarCategoria(index, 'categoria', cat);
+                                                        atualizarCategoria(
+                                                            idx,
+                                                            'categoriaId',
+                                                            c.categoriaId
+                                                        );
                                                         setExpandedCategorias(null);
                                                     }}
                                                 />
@@ -132,7 +188,9 @@ export default function CadastroProjetos() {
                                     <TextInput
                                         label="Valor"
                                         value={item.valorMaximo}
-                                        onChangeText={(text) => atualizarCategoria(index, 'valorMaximo', text)}
+                                        onChangeText={(t) =>
+                                            atualizarCategoria(idx, 'valorMaximo', t)
+                                        }
                                         style={[styles.input, { width: 100, marginLeft: 8 }]}
                                         mode="flat"
                                         keyboardType="numeric"
@@ -150,26 +208,35 @@ export default function CadastroProjetos() {
 
                         <View style={styles.rightSide}>
                             <Title style={styles.selectTitle}>Funcionários</Title>
-                            {funcionarios.map((item, index) => (
-                                <View key={index}>
-                                    <List.Accordion
-                                        title={item || "Escolha o Funcionário"}
-                                        style={styles.field}
-                                        expanded={expandedFuncionarios === index}
-                                        onPress={() => setExpandedFuncionarios(expandedFuncionarios === index ? null : index)}
-                                    >
-                                        {listaFuncionarios.map((nome, idx) => (
-                                            <List.Item
-                                                key={idx}
-                                                title={nome}
-                                                onPress={() => {
-                                                    atualizarFuncionario(index, nome);
-                                                    setExpandedFuncionarios(null);
-                                                }}
-                                            />
-                                        ))}
-                                    </List.Accordion>
-                                </View>
+                            {funcionariosInput.map((item, idx) => (
+                                <List.Accordion
+                                    key={idx}
+                                    title={
+                                        listaFuncionarios.find((f) => String(f.userId) === item)
+                                            ?.name || 'Escolha o Funcionário'
+                                    }
+                                    style={styles.field}
+                                    expanded={expandedFuncionarios === idx}
+                                    onPress={() =>
+                                        setExpandedFuncionarios(
+                                            expandedFuncionarios === idx ? null : idx
+                                        )
+                                    }
+                                >
+                                    {listaFuncionarios.map((f) => (
+                                        <List.Item
+                                            key={f._id}
+                                            title={f.name}
+                                            onPress={() => {
+                                                atualizarFuncionario(
+                                                    idx,
+                                                    String(f.userId)
+                                                );
+                                                setExpandedFuncionarios(null);
+                                            }}
+                                        />
+                                    ))}
+                                </List.Accordion>
                             ))}
                             <IconButton
                                 icon="plus"
@@ -181,32 +248,7 @@ export default function CadastroProjetos() {
 
                             <Card style={styles.totalCard}>
                                 <Card.Content>
-                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>
-
-                                    {categorias.map((item, index) => (
-                                        <View key={index} style={styles.valorItem}>
-                                            <View style={[styles.bolinha, { backgroundColor: coresCategoria[index % coresCategoria.length] }]} />
-                                            <Title style={styles.valorTexto}>
-                                                {item.categoria || "Sem categoria"} - R$ {(parseFloat(item.valorMaximo) || 0).toFixed(2)}
-                                            </Title>
-                                        </View>
-                                    ))}
-
-                                    <View style={styles.barContainer}>
-                                        {categorias.map((item, index) => {
-                                            const porcentagem = valorTotal > 0 ? (parseFloat(item.valorMaximo) || 0) / valorTotal : 0;
-                                            return (
-                                                <View
-                                                    key={index}
-                                                    style={{
-                                                        width: `${porcentagem * 100}%`,
-                                                        height: 20,
-                                                        backgroundColor: coresCategoria[index % coresCategoria.length],
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </View>
+                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>                                
                                 </Card.Content>
                             </Card>
 
