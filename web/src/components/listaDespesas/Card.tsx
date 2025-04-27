@@ -103,6 +103,15 @@ export default function Card({
       : 'aguardando aprovação';
   const statusColor = colors[statusKey];
 
+  const statusTextColor =
+    rawStatus === 'aprovado'
+      ? colors.aprovado.text
+      : rawStatus === 'recusado'
+      ? colors.recusado.text
+      : rawStatus === 'aguardando aprovação'
+      ? colors['aguardando aprovação'].text
+      : 'orange';
+
   return (
     <View
       style={[
@@ -116,36 +125,47 @@ export default function Card({
         activeOpacity={0.7}
       >
         <View style={{ flexDirection: 'column', flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, justifyContent: 'space-between' }}>
             <Text style={styles.title}>{pacote.nome}</Text>
-            <Label text={pacote.status} color={statusColor} />
+            {/* <Label text={pacote.status} color={statusColor} /> */}
+            <View style={styles.statusButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.statusButton, { backgroundColor: colors.aprovado.bg }]}
+                onPress={() => updateStatusPacote('Aprovado')}
+              >
+                <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>Aprovar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.statusButton, { backgroundColor: colors.recusado.bg }]}
+                onPress={() => updateStatusPacote('Recusado')}
+              >
+                <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>Rejeitar</Text>
+              </TouchableOpacity>
+              <Ionicons
+                name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
+                size={24}
+                color="#444"
+              />
+            </View>
           </View>
           {usuario?.name && (
-            <Text style={styles.subtitle}>Funcionário: {usuario.name}</Text>
+            <Text style={styles.subtitle}>
+              <Text style={{ fontWeight: 'bold' }}>Funcionário: </Text>
+              {usuario.name}
+            </Text>
           )}
           {projeto?.nome && (
-            <Text style={styles.subtitle}>Projeto: {projeto.nome}</Text>
+            <Text style={styles.subtitle}>
+              <Text style={{ fontWeight: 'bold' }}>Projeto: </Text>
+              {projeto.nome}
+            </Text>
           )}
-        </View>
-
-        <View style={styles.statusButtonsContainer}>
-          <TouchableOpacity
-            style={[styles.statusButton, { backgroundColor: colors.aprovado.bg }]}
-            onPress={() => updateStatusPacote('Aprovado')}
-          >
-            <Text style={[styles.statusButtonText, { color: colors.aprovado.text }]}>Aprovar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.statusButton, { backgroundColor: colors.recusado.bg }]}
-            onPress={() => updateStatusPacote('Recusado')}
-          >
-            <Text style={[styles.statusButtonText, { color: colors.recusado.text }]}>Rejeitar</Text>
-          </TouchableOpacity>
-          <Ionicons
-            name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
-            size={24}
-            color="#444"
-          />
+          {pacote?.status && (
+            <Text style={styles.subtitle}>
+              <Text style={{ fontWeight: 'bold' }}>Status: </Text>
+              <Text style={{ color: statusTextColor }}>{pacote.status}</Text>
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
 
