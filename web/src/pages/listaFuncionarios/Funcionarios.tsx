@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
 import {
     Card,
     TextInput,
@@ -22,20 +22,19 @@ interface ListaFuncionariosProps {
     filtro: string;
     setTitulo: (titulo: string) => void;
     setShowSearch: (show: boolean) => void;
-  }
-  
-  export default function Funcionarios({ setTitulo, filtro, setShowSearch }: ListaFuncionariosProps) {
+}
+
+export default function Funcionarios({ setTitulo, filtro, setShowSearch }: ListaFuncionariosProps) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [search, setSearch] = useState('');
     const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
 
-    
+
 
     useEffect(() => {
         setTitulo('Lista de Funcionários');
-        setShowSearch(true);  
-        
+        setShowSearch(true);
+
         api.get('/userList')
             .then(({ data }) => {
                 // Ajuste: acessar array de usuários dentro de data.users
@@ -61,7 +60,7 @@ interface ListaFuncionariosProps {
         return funcionarios.filter(fun =>
             fun.name.toLowerCase().includes(filtro.toLowerCase())
         );
-    }, [filtro, funcionarios]);    
+    }, [filtro, funcionarios]);
 
     const removeFuncionario = (id: string) => {
         api.delete(`/users/${id}`)
@@ -113,44 +112,48 @@ interface ListaFuncionariosProps {
                         />
                     </View>
 
-                    <DataTable style={styles.tableContainer}>
-                        <DataTable.Header style={styles.header}>
-                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
-                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>ID</DataTable.Title>
-                            <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>EMAIL</DataTable.Title>
-                            <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>CRIAÇÃO</DataTable.Title>
-                            {/* <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title> */}
-                        </DataTable.Header>
+                    <View style={{ height: '80%' }}>
+                        <ScrollView>
+                            <DataTable style={styles.tableContainer}>
+                                <DataTable.Header style={styles.header}>
+                                    <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
+                                    <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>ID</DataTable.Title>
+                                    <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>EMAIL</DataTable.Title>
+                                    <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>CRIAÇÃO</DataTable.Title>
+                                    {/* <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title> */}
+                                </DataTable.Header>
 
-                        {filtered.map((item, idx) => (
-                            <DataTable.Row
-                                key={item.id}
-                                style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
-                            >
+                                {filtered.map((item, idx) => (
+                                    <DataTable.Row
+                                        key={item.id}
+                                        style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
+                                    >
 
-                                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
-                                    <Text numberOfLines={1} ellipsizeMode="tail">
-                                        {item.name}
-                                    </Text>
-                                </DataTable.Cell>
-                                <DataTable.Cell style={{ flex: 2 }}>
-                                    <Text style={styles.id}>{item.id}</Text>
-                                </DataTable.Cell>
-                                <DataTable.Cell style={{ flex: 3 }}>
-                                    <Text style={styles.name}>{item.email}</Text>
-                                </DataTable.Cell>
-                                <DataTable.Cell style={{ flex: 2 }}>
-                                    <Text style={styles.name}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-                                </DataTable.Cell>
-                                {/* <DataTable.Cell style={{ flex: 2 }}>
+                                        <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
+                                            <Text numberOfLines={1} ellipsizeMode="tail">
+                                                {item.name}
+                                            </Text>
+                                        </DataTable.Cell>
+                                        <DataTable.Cell style={{ flex: 2 }}>
+                                            <Text style={styles.id}>{item.id}</Text>
+                                        </DataTable.Cell>
+                                        <DataTable.Cell style={{ flex: 3 }}>
+                                            <Text style={styles.name}>{item.email}</Text>
+                                        </DataTable.Cell>
+                                        <DataTable.Cell style={{ flex: 2 }}>
+                                            <Text style={styles.name}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+                                        </DataTable.Cell>
+                                        {/* <DataTable.Cell style={{ flex: 2 }}>
                                     <View style={styles.actions}>
                                         <IconButton icon="delete-outline" size={20} style={styles.iconButton} onPress={() => removeFuncionario(item.id)} />
                                         <IconButton icon="pencil-outline" size={20} style={styles.iconButton} onPress={() => editFuncionario(item.id)} />
                                     </View>
                                 </DataTable.Cell> */}
-                            </DataTable.Row>
-                        ))}
-                    </DataTable>
+                                    </DataTable.Row>
+                                ))}
+                            </DataTable>
+                        </ScrollView>
+                    </View>
                 </Card.Content>
             </Card>
         </View>
