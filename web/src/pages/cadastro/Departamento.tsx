@@ -115,7 +115,7 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
           <View style={styles.row_bottom}>
             <Title style={styles.label}>Lista de Departamentos</Title>
             <Searchbar
-              placeholder="Search here..."
+              placeholder="Buscar ..."
               value={search}
               onChangeText={setSearch}
               style={[styles.search, { backgroundColor: '#FAFAFA' }]}

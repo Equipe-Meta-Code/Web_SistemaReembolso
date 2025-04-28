@@ -138,7 +138,7 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
                     <View style={styles.row_bottom}>
                         <Title style={styles.label}>Lista de Categorias</Title>
                         <Searchbar
-                            placeholder="Search here..."
+                            placeholder="Buscar ..."
                             value={search}
                             onChangeText={setSearch}
                             style={[styles.search, { backgroundColor: '#FAFAFA' }]}
