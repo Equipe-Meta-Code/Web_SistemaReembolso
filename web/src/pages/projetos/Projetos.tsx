@@ -27,8 +27,13 @@ interface Funcionario {
   userId: number;
   name: string;
 }
+interface ProjetosProps {
+    setTitulo: (titulo: string) => void;
+    setShowSearch: (show: boolean) => void;
+  }
 
-export default function CadastroProjetos() {
+
+export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     const [nomeProjeto, setNomeProjeto] = useState('');
     const [descricao, setDescricao] = useState('');
     const [departamentoId, setDepartamentoId] = useState('');
@@ -45,6 +50,8 @@ export default function CadastroProjetos() {
     const scale = useState(new Animated.Value(1))[0];
 
     useEffect(() => {
+        setTitulo('Cadastro de Projetos');
+        setShowSearch(false);     
         const fetchData = async () => {
             try {
                 const [catRes, depRes, funcRes] = await Promise.all([
