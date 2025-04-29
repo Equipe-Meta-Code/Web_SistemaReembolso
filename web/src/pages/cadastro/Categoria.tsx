@@ -57,7 +57,13 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
     
     useEffect(() => {
         fetchCategories();
+        const interval = setInterval(() => {
+            fetchCategories();
+          }, 3000);
+          return () => clearInterval(interval)
     }, []);
+
+    
 
     // Filtra pela busca com segurança
     const filtered = useMemo(

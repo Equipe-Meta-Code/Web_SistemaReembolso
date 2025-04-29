@@ -48,7 +48,15 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
     setTitulo('Departamentos');
     setShowSearch(false);          
     fetchDepartamentos();
+
+    const interval = setInterval(() => {
+      fetchDepartamentos();
+    }, 3000);
+    return () => clearInterval(interval)
+
   }, []);
+
+  
 
   // filtra pela busca
   const filtered = useMemo(
