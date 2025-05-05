@@ -25,17 +25,15 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
     const [name, setName] = useState('');
     const [search, setSearch] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
-
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const from = page * rowsPerPage;
-    const to = Math.min((page + 1) * rowsPerPage, categories.length);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [newName, setNewName] = useState('');
 
     useEffect(() => {
         setTitulo('Categorias');
         setShowSearch(false);
+        fetchCategories();
     }, []);
-    
+
     // carrega e deduplica categorias
     const fetchCategories = () => {
         api.get('/categorias')
@@ -46,6 +44,7 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
                 }));
                 const seen = new Set<string>();
                 const unique = mapped.filter(item => {
+                    if (!item.name) return false;
                     if (seen.has(item.name)) return false;
                     seen.add(item.name);
                     return true;
@@ -54,10 +53,6 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
             })
             .catch(err => console.error('Erro ao carregar categorias', err));
     };
-    
-    useEffect(() => {
-        fetchCategories();
-    }, []);
 
     // Filtra pela busca com segurança
     const filtered = useMemo(
@@ -87,25 +82,18 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
             .catch(err => console.error('Erro ao remover categoria', err));
     };
 
-    // Editar nome da categoria e recarregar
-    const editCategory = (id: string) => {
-        const novoNome = prompt('Novo nome da categoria?', '');
-        if (!novoNome?.trim()) return;
-        api.put(`/categorias/${id}`, { nome: novoNome.trim() })
-            .then(() => fetchCategories())
-            .catch(err => console.error('Erro ao editar categoria', err));
+    // Salvar edição inline
+    const saveEdit = (id: string) => {
+        const trimmed = newName.trim();
+        if (!trimmed) return;
+        api.put(`/categorias/${id}`, { nome: trimmed })
+          .then(() => {
+            setEditingId(null);
+            setNewName('');
+            fetchCategories();
+          })
+          .catch(err => console.error('Erro ao salvar edição', err));
     };
-
-    const handleChangePage = (newPage: number) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (newRowsPerPage: number) => {
-        setRowsPerPage(newRowsPerPage);
-        setPage(0);
-    };
-
-    const displayData = filtered.slice(from, to);
 
     return (
         <View style={styles.container}>
@@ -145,27 +133,46 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
                         />
                     </View>
 
-                    {/* Tabela de categorias */}
+                    {/* Tabela de categorias com edição inline */}
                     <View style={styles.tableContainer}>
                         <DataTable.Header style={styles.header}>
                             <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>NOME</DataTable.Title>
                             <DataTable.Title style={{ flex: 2 }} textStyle={styles.headerText}>AÇÕES</DataTable.Title>
                         </DataTable.Header>
 
-                        {displayData.map((item, idx) => (
+                        {filtered.map((item, idx) => (
                             <DataTable.Row
                                 key={item.id}
                                 style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                             >
-                                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
-                                    <Text numberOfLines={1} ellipsizeMode="tail">
-                                        {item.name}
-                                    </Text>
+                                <DataTable.Cell style={{ flex: 3 }}>
+                                    {editingId === item.id ? (
+                                        <TextInput
+                                            value={newName}
+                                            onChangeText={setNewName}
+                                            mode="outlined"
+                                            contentStyle={{ height: 40 }}
+                                            style={{ backgroundColor: '#FFFFFF', width: '100%' }}
+                                        />
+                                    ) : (
+                                        <Text numberOfLines={1} ellipsizeMode="tail" style={styles.name}>
+                                            {item.name}
+                                        </Text>
+                                    )}
                                 </DataTable.Cell>
                                 <DataTable.Cell style={{ flex: 2 }}>
                                     <View style={styles.actions}>
-                                        <IconButton icon="delete-outline" size={20} onPress={() => removeCategory(item.id)} />
-                                        <IconButton icon="pencil-outline" size={20} onPress={() => editCategory(item.id)} />
+                                        {editingId === item.id ? (
+                                            <>
+                                                <IconButton icon="check" size={20} onPress={() => saveEdit(item.id)} />
+                                                <IconButton icon="close" size={20} onPress={() => { setEditingId(null); setNewName(''); }} />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <IconButton icon="delete-outline" size={20} onPress={() => removeCategory(item.id)} />
+                                                <IconButton icon="pencil-outline" size={20} onPress={() => { setEditingId(item.id); setNewName(item.name); }} />
+                                            </>
+                                        )}
                                     </View>
                                 </DataTable.Cell>
                             </DataTable.Row>
@@ -212,7 +219,6 @@ const styles = StyleSheet.create({
     row_bottom: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
         gap: 120,
         marginBottom: 30,
     },
