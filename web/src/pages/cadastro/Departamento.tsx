@@ -24,6 +24,8 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
   const [name, setName] = useState('');
   const [search, setSearch] = useState('');
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newName, setNewName] = useState('');
 
   const fetchDepartamentos = () => {
     api.get('/departamentos')
@@ -50,7 +52,6 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
     fetchDepartamentos();
   }, []);
 
-  // filtra pela busca
   const filtered = useMemo(
     () =>
       departamentos.filter(dep =>
@@ -76,12 +77,16 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
       .catch(err => console.error('Erro ao remover departamento', err));
   };
 
-  const editDepartamento = (id: string) => {
-    const novoNome = prompt('Novo nome do departamento?', '');
-    if (!novoNome?.trim()) return;
-    api.put(`/departamentos/${id}`, { nome: novoNome.trim() })
-      .then(() => fetchDepartamentos())
-      .catch(err => console.error('Erro ao editar departamento', err));
+  const saveEdit = (id: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    api.put(`/departamentos/${id}`, { nome: trimmed })
+      .then(() => {
+        setEditingId(null);
+        setNewName('');
+        fetchDepartamentos();
+      })
+      .catch(err => console.error('Erro ao salvar edição', err));
   };
 
   return (
@@ -122,7 +127,7 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
             />
           </View>
 
-          {/* Tabela de departamentos */}
+          {/* Tabela de departamentos com edição inline */}
           <View style={styles.tableContainer}>
             <DataTable.Header style={styles.header}>
               <DataTable.Title style={{ flex: 3 }} textStyle={styles.headerText}>DEPARTAMENTO</DataTable.Title>
@@ -134,15 +139,35 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
                 key={dep.id}
                 style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
               >
-                <DataTable.Cell style={{ flex: 3 }} textStyle={styles.name}>
-                  <Text numberOfLines={1} ellipsizeMode="tail">
-                    {dep.name}
-                  </Text>
+                <DataTable.Cell style={{ flex: 3 }}>
+                  {editingId === dep.id ? (
+                    <TextInput
+                      value={newName}
+                      onChangeText={setNewName}
+                      mode="outlined"
+                      contentStyle={{ height: 40 }}
+                      style={{ backgroundColor: '#FFFFFF', width: '100%' }}
+                    />
+                  ) : (
+                    <Text numberOfLines={1} ellipsizeMode="tail" style={styles.name}>
+                      {dep.name}
+                    </Text>
+                  )}
                 </DataTable.Cell>
+
                 <DataTable.Cell style={{ flex: 2 }}>
                   <View style={styles.actions}>
-                    <IconButton icon="delete-outline" size={20} onPress={() => removeDepartamento(dep.id)} />
-                    <IconButton icon="pencil-outline" size={20} onPress={() => editDepartamento(dep.id)} />
+                    {editingId === dep.id ? (
+                      <>                        
+                        <IconButton icon="check" size={20} onPress={() => saveEdit(dep.id)} />
+                        <IconButton icon="close" size={20} onPress={() => { setEditingId(null); setNewName(''); }} />
+                      </>
+                    ) : (
+                      <>
+                        <IconButton icon="delete-outline" size={20} onPress={() => removeDepartamento(dep.id)} />
+                        <IconButton icon="pencil-outline" size={20} onPress={() => { setEditingId(dep.id); setNewName(dep.name); }} />
+                      </>
+                    )}
                   </View>
                 </DataTable.Cell>
               </DataTable.Row>
@@ -190,7 +215,6 @@ const styles = StyleSheet.create({
   row_bottom: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
     gap: 120,
     marginBottom: 30,
   },
