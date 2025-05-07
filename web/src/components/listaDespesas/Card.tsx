@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Alert,
+  Linking,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
@@ -51,6 +52,7 @@ interface Despesa {
   descricao: string;
   aprovacao: string;
   categoria: string;
+  comprovante?: string;
 }
 
 interface Projeto { nome: string; }
@@ -64,6 +66,7 @@ interface CardProps {
   categoria?: Categoria;
   usuario?: Usuario;
   visivel: boolean;
+  comprovante: string;
   alternarVisibilidade: () => void;
   onAprovacaoChange: () => void;
 }
@@ -198,6 +201,7 @@ export default function Card({
               <Text style={[styles.cell, styles.data]}>DATA</Text>
               <Text style={[styles.cell, styles.valor]}>VALOR</Text>
               <Text style={[styles.cell, styles.descricao]}>DESCRIÇÃO</Text>
+              <Text style={[styles.cell, styles.comprovante]}>COMPROVANTE</Text>
               <Text style={[styles.cell, styles.aprovacao]}>APROVAÇÃO</Text>
             </View>
           )}
@@ -233,7 +237,13 @@ export default function Card({
                 </Text>
                 <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
                 <Text style={[styles.cell, styles.descricao]}>{d.descricao}</Text>
-
+                <View style={[styles.cell, styles.descricao]}>
+                <TouchableOpacity
+                  style={styles.comprovanteButton}
+                  onPress={() => { if (d.comprovante) Linking.openURL(d.comprovante); }}>
+                  <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
+                </TouchableOpacity>
+              </View>
                 <View style={[styles.cell, styles.aprovacao]}>
                   <View style={{ position: 'relative' }}>
                     <TouchableOpacity
