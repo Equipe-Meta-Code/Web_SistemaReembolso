@@ -63,6 +63,7 @@ export default StyleSheet.create({
   valor: { flex: 1.5 },
   usuario: { flex: 2 },
   descricao: { flex: 3 },
+  comprovante: { flex: 2 },
   aprovacao: { flex: 1.5 },
   aprovacaoToggle: {
     flexDirection: 'row',
@@ -109,5 +110,19 @@ export default StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
+  comprovanteButton: {
+    backgroundColor: '#e0e7ff',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  comprovanteButtonText: {
+    color: '#3730a3',
+    fontWeight: '500',
+    fontSize: 13,
+  },
+  
 });

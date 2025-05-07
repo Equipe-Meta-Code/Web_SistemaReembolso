@@ -25,6 +25,7 @@ interface Despesa {
   valor_gasto: number;
   descricao: string;
   aprovacao: string;
+  comprovante: string;
 }
 
 interface Categoria { _id: string; nome: string; categoriaId?: number; }
@@ -117,7 +118,10 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
               const despesasComNome = despesasRelacionadas.map(d => ({
                 ...d,
                 categoria: getCategoria(d.categoria)?.nome ?? 'Sem categoria',
+                comprovante: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // link de teste
+                //comprovante: d.comprovante, 
               }));
+              
 
               return (
                 <Card
@@ -128,8 +132,8 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                   usuario={usuarioRelacionado}
                   visivel={!!mostrarPacote[pacote._id]}
                   alternarVisibilidade={() => alternarVisibilidade(pacote._id)}
-                  onAprovacaoChange={fetchData}
-                />
+                  onAprovacaoChange={fetchData} 
+                  comprovante={''}                />
               );
             })}
           </View>
