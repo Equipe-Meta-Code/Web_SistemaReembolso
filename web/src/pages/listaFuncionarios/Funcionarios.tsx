@@ -10,6 +10,7 @@ import {
     DataTable,
 } from 'react-native-paper';
 import api from '../../services/api';
+import Foto from '../../components/foto/Foto';
 
 interface Funcionario {
     id: string;
@@ -116,7 +117,18 @@ export default function Funcionarios({ setTitulo, filtro, setShowSearch }: Lista
                                         key={item.id}
                                         style={[styles.row, idx % 2 === 0 ? styles.rowEven : styles.rowOdd]}
                                     >
-                                        <DataTable.Cell style={{ flex: 3 }}>
+                                         <Foto
+                                                tipo="user"
+                                                tipoId={+item.id}
+                                                width={40}
+                                                height={40}
+                                                borderRadius={20}
+                                                borderWidth={1}
+                                                borderColor="#E9ECEF"
+                                                refreshKey={item.id}
+                                                fallbackSource={require('../../assets/perfil.png')}
+                                            />
+                                        <DataTable.Cell style={styles.cellPhotoName}>
                                             <Text numberOfLines={1} ellipsizeMode="tail" style={styles.name}>
                                                 {item.name}
                                             </Text>
@@ -183,10 +195,18 @@ const styles = StyleSheet.create({
     },
     rowEven: { backgroundColor: '#FFFFFF' },
     rowOdd: { backgroundColor: '#F8F9FC' },
+    cellPhotoName: {
+        flex: 3,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     name: {
         fontSize: 16,
         color: '#2C2C2C',
+        marginLeft: 8,
     },
+
     id: {
         fontSize: 16,
         color: '#6E6E6E',
