@@ -27,14 +27,19 @@ interface Funcionario {
   userId: number;
   name: string;
 }
+interface ProjetosProps {
+    setTitulo: (titulo: string) => void;
+    setShowSearch: (show: boolean) => void;
+}
 
-export default function CadastroProjetos() {
+
+export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     const [nomeProjeto, setNomeProjeto] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [departamentoId, setDepartamentoId] = useState('');
+    const [departamentosInput, setDepartamentosInput] = useState<string[]>(['']);
     const [categoriasInput, setCategoriasInput] = useState<{ categoriaId: string; valorMaximo: string }[]>([{ categoriaId: '', valorMaximo: '' }]);
     const [funcionariosInput, setFuncionariosInput] = useState<string[]>(['']);
-    const [expandedDepartamento, setExpandedDepartamento] = useState(false);
+    const [expandedDepartamentos, setExpandedDepartamentos] = useState<number | null>(null);
     const [expandedCategorias, setExpandedCategorias] = useState<number | null>(null);
     const [expandedFuncionarios, setExpandedFuncionarios] = useState<number | null>(null);
 
@@ -45,6 +50,8 @@ export default function CadastroProjetos() {
     const scale = useState(new Animated.Value(1))[0];
 
     useEffect(() => {
+        setTitulo('Cadastro de Projetos');
+        setShowSearch(false);     
         const fetchData = async () => {
             try {
                 const [catRes, depRes, funcRes] = await Promise.all([
@@ -67,6 +74,16 @@ export default function CadastroProjetos() {
         (total, item) => total + (parseFloat(item.valorMaximo) || 0),
         0
     );
+
+    const adicionarDepartamento = () =>
+        setDepartamentosInput([...departamentosInput, '']);
+
+    const atualizarDepartamento = (index: number, valor: string) => {
+        const arr = [...departamentosInput];
+        arr[index] = valor;
+        setDepartamentosInput(arr);
+    };
+    // -----------------------------------------
 
     const adicionarCategoria = () =>
         setCategoriasInput([...categoriasInput, { categoriaId: '', valorMaximo: '' }]);
@@ -110,7 +127,7 @@ export default function CadastroProjetos() {
         if (
             !nomeProjeto ||
             !descricao ||
-            !departamentoId ||
+            departamentosInput.some((d) => !d) ||
             categoriasInput.some((c) => !c.categoriaId || !c.valorMaximo) ||
             funcionariosInput.some((f) => !f)
         ) {
@@ -126,14 +143,16 @@ export default function CadastroProjetos() {
                 valor_maximo: parseFloat(c.valorMaximo),
             };
         });
-        const departamentos = [
-            {
-                departamentoId,
-                nome:
-                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
-                        ?.nome ?? 'Desconhecido',
-            },
-        ];
+
+        // monta array de departamentos
+        const departamentos = departamentosInput.map((depId) => {
+            const d = listaDepartamentos.find((x) => x.departamentoId === depId);
+            return {
+                departamentoId: depId,
+                nome: d?.nome ?? 'Desconhecido',
+            };
+        });
+
         const funcionarios = funcionariosInput.map((idStr) => {
             const userId = Number(idStr);
             const f = listaFuncionarios.find((x) => x.userId === userId);
@@ -154,7 +173,7 @@ export default function CadastroProjetos() {
             Alert.alert('Sucesso', 'Projeto cadastrado com sucesso!');
             setNomeProjeto('');
             setDescricao('');
-            setDepartamentoId('');
+            setDepartamentosInput(['']);
             setCategoriasInput([{ categoriaId: '', valorMaximo: '' }]);
             setFuncionariosInput(['']);
         } catch (error) {
@@ -187,27 +206,41 @@ export default function CadastroProjetos() {
                                 mode="flat"
                             />
 
-                            <Title style={styles.selectTitle}>Departamento</Title>
-                            <List.Accordion
-                                title={
-                                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
-                                        ?.nome || 'Escolha o Departamento'
-                                }
-                                style={styles.field}
-                                expanded={expandedDepartamento}
-                                onPress={() => setExpandedDepartamento(!expandedDepartamento)}
-                            >
-                                {listaDepartamentos.map((d) => (
-                                    <List.Item
-                                        key={d._id}
-                                        title={d.nome}
-                                        onPress={() => {
-                                            setDepartamentoId(d.departamentoId);
-                                            setExpandedDepartamento(false);
-                                        }}
-                                    />
-                                ))}
-                            </List.Accordion>
+                            <Title style={styles.selectTitle}>Departamentos</Title>
+                            {departamentosInput.map((item, idx) => (
+                                <List.Accordion
+                                    key={idx}
+                                    title={
+                                        listaDepartamentos.find((d) => d.departamentoId === item)
+                                            ?.nome || 'Escolha o Departamento'
+                                    }
+                                    style={styles.field}
+                                    expanded={expandedDepartamentos === idx}
+                                    onPress={() =>
+                                        setExpandedDepartamentos(
+                                            expandedDepartamentos === idx ? null : idx
+                                        )
+                                    }
+                                >
+                                    {listaDepartamentos.map((d) => (
+                                        <List.Item
+                                            key={d._id}
+                                            title={d.nome}
+                                            onPress={() => {
+                                                atualizarDepartamento(idx, d.departamentoId);
+                                                setExpandedDepartamentos(null);
+                                            }}
+                                        />
+                                    ))}
+                                </List.Accordion>
+                            ))}
+                            <IconButton
+                                icon="plus"
+                                size={20}
+                                onPress={adicionarDepartamento}
+                                style={[styles.addButton, { backgroundColor: '#ff8522' }]}
+                                iconColor="white"
+                            />
 
                             <Title style={styles.selectTitle}>Categorias e Valor Máximo (R$)</Title>
                             {categoriasInput.map((item, idx) => (
@@ -433,4 +466,3 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
-

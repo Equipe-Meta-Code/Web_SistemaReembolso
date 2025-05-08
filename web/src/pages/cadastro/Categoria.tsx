@@ -53,6 +53,16 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
             })
             .catch(err => console.error('Erro ao carregar categorias', err));
     };
+    
+    useEffect(() => {
+        fetchCategories();
+        const interval = setInterval(() => {
+            fetchCategories();
+          }, 3000);
+          return () => clearInterval(interval)
+    }, []);
+
+    
 
     // Filtra pela busca com segurança
     const filtered = useMemo(
@@ -126,7 +136,7 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
                     <View style={styles.row_bottom}>
                         <Title style={styles.label}>Lista de Categorias</Title>
                         <Searchbar
-                            placeholder="Search here..."
+                            placeholder="Buscar ..."
                             value={search}
                             onChangeText={setSearch}
                             style={[styles.search, { backgroundColor: '#FAFAFA' }]}

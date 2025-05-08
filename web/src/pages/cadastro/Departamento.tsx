@@ -50,8 +50,17 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
     setTitulo('Departamentos');
     setShowSearch(false);          
     fetchDepartamentos();
+
+    const interval = setInterval(() => {
+      fetchDepartamentos();
+    }, 3000);
+    return () => clearInterval(interval)
+
   }, []);
 
+  
+
+  // filtra pela busca
   const filtered = useMemo(
     () =>
       departamentos.filter(dep =>
@@ -120,7 +129,7 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
           <View style={styles.row_bottom}>
             <Title style={styles.label}>Lista de Departamentos</Title>
             <Searchbar
-              placeholder="Search here..."
+              placeholder="Buscar ..."
               value={search}
               onChangeText={setSearch}
               style={[styles.search, { backgroundColor: '#FAFAFA' }]}
