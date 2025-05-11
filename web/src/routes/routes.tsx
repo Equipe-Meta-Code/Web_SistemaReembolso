@@ -7,6 +7,8 @@ import ListaFuncionarios from '../pages/listaFuncionarios/Funcionarios';
 import Departamentos from '../pages/cadastro/Departamento';
 import { RootStackParamList } from './navigation.d';
 import Projetos from '../pages/projetos/Projetos';
+import ListaProjetos from '../pages/projetos/ListaProjetos';
+
 
 interface RoutesProps {
   filtro: string;
@@ -42,12 +44,17 @@ export function Routes({ filtro, setTitulo, setShowSearch }: RoutesProps) {
       </Stack.Screen>
 
       <Stack.Screen name="Projetos">
-        {() => <Projetos setTitulo={setTitulo} setShowSearch={setShowSearch} />}
+        {() => <ListaProjetos setTitulo={setTitulo} setShowSearch={setShowSearch} filtro={''} />}
       </Stack.Screen>
 
       <Stack.Screen name="Departamentos">
         {() => <Departamentos setTitulo={setTitulo} setShowSearch={setShowSearch} />}
       </Stack.Screen>
+
+      <Stack.Screen name="CadastroProjetos">
+        {() => <Projetos setTitulo={setTitulo} setShowSearch={setShowSearch} />}
+      </Stack.Screen>
+
 
     </Stack.Navigator>
   );
