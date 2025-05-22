@@ -10,6 +10,7 @@ import {
 import Card from '../../components/listaDespesas/Card';
 import api from '../../services/api';
 import styles from './style';
+import { Picker } from '@react-native-picker/picker';
 
 interface Pacote {
   _id: string;
@@ -59,6 +60,8 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
   const [statusSelecionados, setStatusSelecionados] = useState<string[]>([]);
   const [funcionariosSelecionados, setFuncionariosSelecionados] = useState<number[]>([]);
   const [projetosSelecionados, setProjetosSelecionados] = useState<number[]>([]);
+  const [funcionariosDropdowns, setFuncionariosDropdowns] = useState<number[]>([0]);
+  const [projetosDropdowns, setProjetosDropdowns] = useState<number[]>([0]);
 
   useEffect(() => {
     setTitulo('Lista de Despesas');
@@ -134,6 +137,31 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
     return okStatus && okUser && okProjeto;
   });
 
+  // Funções para adicionar/remover dropdowns
+  const addFuncionarioDropdown = () => setFuncionariosDropdowns(prev => [...prev, prev.length]);
+  const removeFuncionarioDropdown = (idx: number) =>
+    setFuncionariosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+
+  const addProjetoDropdown = () => setProjetosDropdowns(prev => [...prev, prev.length]);
+  const removeProjetoDropdown = (idx: number) =>
+    setProjetosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+
+  // Atualiza seleção de funcionário/projeto por dropdown
+  const setFuncionarioSelecionado = (idx: number, userId: number) => {
+    setFuncionariosSelecionados(prev => {
+      const novo = [...prev];
+      novo[idx] = userId;
+      return novo;
+    });
+  };
+  const setProjetoSelecionado = (idx: number, projetoId: number) => {
+    setProjetosSelecionados(prev => {
+      const novo = [...prev];
+      novo[idx] = projetoId;
+      return novo;
+    });
+  };
+
   return (
     <ScrollView
       style={styles.pagina}
@@ -177,55 +205,57 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
           </View>
         </View>
 
+        {/* Funcionários com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
-          <View style={styles.opcoesFiltro}>
-            {usuarios.map(u => (
-              <Pressable
-                key={u.userId}
-                onPress={() => toggleUser(u.userId!)}
-                style={[
-                  styles.containerOpcao,
-                  funcionariosSelecionados.includes(u.userId!) && styles.filtroSelecionado,
-                ]}
-              >
-                <Text
-                  style={
-                    funcionariosSelecionados.includes(u.userId!)
-                      ? styles.textoFiltroSelecionado
-                      : styles.textoOpcao
-                  }
+          <View>
+            {funcionariosDropdowns.map((_, idx) => (
+              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                <Picker
+                  selectedValue={funcionariosSelecionados[idx] ?? ''}
+                  style={{ width: 180, height: 40 }}
+                  onValueChange={value => setFuncionarioSelecionado(idx, value)}
                 >
-                  {u.name}
-                </Text>
-              </Pressable>
+                  <Picker.Item label="Selecione" value="" />
+                  {usuarios.map(u => (
+                    <Picker.Item key={u.userId} label={u.name} value={u.userId} />
+                  ))}
+                </Picker>
+                <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
+                </Pressable>
+              </View>
             ))}
+            <Pressable onPress={addFuncionarioDropdown} style={{ marginTop: 4 }}>
+              <Text style={{ color: 'blue' }}>+ Adicionar Funcionário</Text>
+            </Pressable>
           </View>
         </View>
 
+        {/* Projetos com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Projetos:</Text>
-          <View style={styles.opcoesFiltro}>
-            {projetos.map(p => (
-              <Pressable
-                key={p.projetoId}
-                onPress={() => toggleProject(p.projetoId!)}
-                style={[
-                  styles.containerOpcao,
-                  projetosSelecionados.includes(p.projetoId!) && styles.filtroSelecionado,
-                ]}
-              >
-                <Text
-                  style={
-                    projetosSelecionados.includes(p.projetoId!)
-                      ? styles.textoFiltroSelecionado
-                      : styles.textoOpcao
-                  }
+          <View>
+            {projetosDropdowns.map((_, idx) => (
+              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                <Picker
+                  selectedValue={projetosSelecionados[idx] ?? ''}
+                  style={{ width: 180, height: 40 }}
+                  onValueChange={value => setProjetoSelecionado(idx, value)}
                 >
-                  {p.nome}
-                </Text>
-              </Pressable>
+                  <Picker.Item label="Selecione" value="" />
+                  {projetos.map(p => (
+                    <Picker.Item key={p.projetoId} label={p.nome} value={p.projetoId} />
+                  ))}
+                </Picker>
+                <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
+                </Pressable>
+              </View>
             ))}
+            <Pressable onPress={addProjetoDropdown} style={{ marginTop: 4 }}>
+              <Text style={{ color: 'blue' }}>+ Adicionar Projeto</Text>
+            </Pressable>
           </View>
         </View>
       </View>
