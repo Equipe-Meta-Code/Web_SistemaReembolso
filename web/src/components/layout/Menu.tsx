@@ -6,6 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../routes/navigation.d";
 import BotaoMenu from "./BotaoMenu";
+import { Alert } from "react-native";
+import { Platform } from "react-native";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -24,6 +26,22 @@ interface MenuProps {
 export default function Menu({ onLogout }: MenuProps) {
   const navigation = useNavigation<NavProp>();
   const [collapsed, setCollapsed] = useState(false);
+
+  const confirmarLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm("Deseja mesmo sair da sua conta?");
+      if (confirmed) onLogout();
+    } else {
+      Alert.alert(
+        "Confirmação",
+        "Deseja mesmo sair da sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sair", onPress: onLogout }
+        ]
+      );
+    }
+  };
 
   return (
     <View style={[style.menu, collapsed ? { width: 60 } : { width: 240 }]}>
@@ -61,7 +79,7 @@ export default function Menu({ onLogout }: MenuProps) {
               <BotaoMenu
                 nomeBotao="Logout"
                 iconName= "exit-outline"
-                onPress={onLogout} 
+                onPress={confirmarLogout}
               />
           </View>
         </>
@@ -93,7 +111,7 @@ export default function Menu({ onLogout }: MenuProps) {
 
             <TouchableOpacity 
               style={style.botaoIcone}
-              onPress={onLogout} 
+              onPress={confirmarLogout}
             >
               <Ionicons 
                 name="log-out-outline" 

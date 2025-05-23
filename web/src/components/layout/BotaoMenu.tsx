@@ -19,6 +19,7 @@ interface BotaoMenuProps {
 
 const BotaoMenu: React.FC<BotaoMenuProps> = ({
   nomeBotao,
+  onPress,
   iconName,
   iconSize = 24,
   iconColor = 'rgb(0, 0, 0)',
@@ -27,10 +28,18 @@ const BotaoMenu: React.FC<BotaoMenuProps> = ({
 
   const navigation = useNavigation<NavigationProps>();
 
+  const handlePress = () => {
+    if (onPress) {
+      onPress(); // usa o onPress personalizado se existir
+    } else {
+      navigation.navigate(nomeBotao as keyof RootStackParamList); // senão, navega normalmente
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[style.botaoMenu, customStyle]}
-      onPress={() => navigation.navigate(nomeBotao as keyof RootStackParamList)}
+      onPress={handlePress}
     >
       {iconName && <Ionicons name={iconName} size={iconSize} color={iconColor} />}
       <Text style={style.textoBotaoMenu}>{nomeBotao}</Text>
