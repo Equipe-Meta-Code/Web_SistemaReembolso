@@ -33,7 +33,7 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
 
   useEffect(() => {
     setTitulo('Lista de Projetos');
-    setShowSearch(false);
+    setShowSearch(true);
   }, []);
 
   const fetchProjetos = async () => {

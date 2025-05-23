@@ -92,7 +92,7 @@ export default function CardProjeto({
               <View key={cat._id} style={[styles.cardItem, { marginBottom: 8 }]}>
                 <Label text={cat.nome} color={{ bg, text }} />
                 <Text style={styles.subtitle}>
-                  Valor máximo: R$ {cat.valor_maximo.toFixed(2)}
+                  Valor máximo: R$ {cat.valor_maximo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
               </View>
             );
