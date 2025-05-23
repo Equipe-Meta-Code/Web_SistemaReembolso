@@ -17,5 +17,16 @@ export default StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         marginBottom: 4,
-  },
+    },
+    inputFiltro: {
+        height: 40,
+        width: 200,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 6,
+        paddingHorizontal: 10,
+        backgroundColor: '#fff',
+        fontSize: 16,
+        marginTop: 4,
+    },
 });

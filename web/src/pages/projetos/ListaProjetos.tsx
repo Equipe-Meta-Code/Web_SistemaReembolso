@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Pressable,
+  TextInput,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import api from '../../services/api';
@@ -24,8 +25,8 @@ export interface Usuario {
   _id: string;
   name: string;
   email: string;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  createdAt: string;
+  updatedAt: string;
   userId: number;
   __v: number;
   twoFactorEnabled: boolean;
@@ -42,7 +43,7 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
   const [quantidadeProjetos, setQuantidadeProjetos] = useState(5);
   const [visivelProjeto, setVisivelProjeto] = useState<Record<number, boolean>>({});
 
-  // Estados para filtro de funcionários
+  const [nomeFiltro, setNomeFiltro] = useState<string>('');
   const [funcionariosDropdowns, setFuncionariosDropdowns] = useState<number[]>([0]);
   const [funcionariosSelecionados, setFuncionariosSelecionados] = useState<number[]>([]);
 
@@ -78,7 +79,6 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Funções para adicionar/remover dropdowns de funcionários
   const addFuncionarioDropdown = () =>
     setFuncionariosDropdowns(prev => [...prev, prev.length]);
   const removeFuncionarioDropdown = (idx: number) => {
@@ -95,16 +95,17 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
     });
   };
 
-  // Aplica filtros: nome + funcionários
+  // Filtra por nome (search input + prop filtro) e por funcionários
   const projetosFiltrados = projetos.filter(p => {
-    const nomeOk = p.nome.toLowerCase().includes(filtro.toLowerCase());
+    const nomePropOk = p.nome.toLowerCase().includes(filtro.toLowerCase());
+    const nomeLocalOk = p.nome.toLowerCase().includes(nomeFiltro.toLowerCase());
     const funcionariosValidos = funcionariosSelecionados.filter(
       f => typeof f === 'number' && !isNaN(f)
     );
     const atendeFuncionario =
       funcionariosValidos.length === 0 ||
       p.funcionarios.some(f => funcionariosValidos.includes(f.userId));
-    return nomeOk && atendeFuncionario;
+    return nomePropOk && nomeLocalOk && atendeFuncionario;
   });
 
   const projetosVisiveis = projetosFiltrados.slice(0, quantidadeProjetos);
@@ -142,6 +143,19 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
           </TouchableOpacity>
         </View>
 
+        {/* Filtro por nome do projeto */}
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.filtroTexto}>Nome do Projeto:</Text>
+          <TextInput
+            value={nomeFiltro}
+            onChangeText={setNomeFiltro}
+            placeholder="Buscar projeto..."
+            placeholderTextColor="#aaa"
+            style={styles.inputFiltro}
+          />
+        </View>
+
+        {/* Filtro de Funcionários */}
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
           {funcionariosDropdowns.map((_, idx) => (
