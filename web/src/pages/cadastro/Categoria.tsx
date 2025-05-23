@@ -32,13 +32,20 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
         setTitulo('Categorias');
         setShowSearch(false);
         fetchCategories();
+
+        const interval = setInterval(() => {
+            fetchCategories();
+        }, 3000);
+        return () => clearInterval(interval);
     }, []);
 
     // carrega e deduplica categorias
     const fetchCategories = () => {
         api.get('/categorias')
             .then(({ data }) => {
-                const mapped: Category[] = data.map((d: any) => ({
+                // API retorna objeto com campos { message, alertType, categorias }
+                const raw = Array.isArray(data) ? data : data.categorias;
+                const mapped: Category[] = raw.map((d: any) => ({
                     id: d._id,
                     name: typeof d.nome === 'string' ? d.nome : '',
                 }));
@@ -53,16 +60,6 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
             })
             .catch(err => console.error('Erro ao carregar categorias', err));
     };
-    
-    useEffect(() => {
-        fetchCategories();
-        const interval = setInterval(() => {
-            fetchCategories();
-          }, 3000);
-          return () => clearInterval(interval)
-    }, []);
-
-    
 
     // Filtra pela busca com segurança
     const filtered = useMemo(
@@ -97,12 +94,12 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
         const trimmed = newName.trim();
         if (!trimmed) return;
         api.put(`/categorias/${id}`, { nome: trimmed })
-          .then(() => {
-            setEditingId(null);
-            setNewName('');
-            fetchCategories();
-          })
-          .catch(err => console.error('Erro ao salvar edição', err));
+            .then(() => {
+                setEditingId(null);
+                setNewName('');
+                fetchCategories();
+            })
+            .catch(err => console.error('Erro ao salvar edição', err));
     };
 
     return (

@@ -132,7 +132,7 @@ export default StyleSheet.create({
     fontWeight: '500',
     fontSize: 13,
   },
-  sectionTitle: {
+  tituloSecao: {
     fontSize: 16,
     fontWeight: '700',
     marginTop: 14,

@@ -30,7 +30,9 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
   const fetchDepartamentos = () => {
     api.get('/departamentos')
       .then(({ data }) => {
-        const mapped: Departamento[] = data.map((d: any) => ({
+        // API retorna objeto com campos { message, alertType, departamentos }
+        const raw = Array.isArray(data) ? data : data.departamentos;
+        const mapped: Departamento[] = raw.map((d: any) => ({
           id: d._id,
           name: typeof d.nome === 'string' ? d.nome : '',
         }));
@@ -54,11 +56,8 @@ export default function Departamentos({ setTitulo, setShowSearch }: Departamento
     const interval = setInterval(() => {
       fetchDepartamentos();
     }, 3000);
-    return () => clearInterval(interval)
-
+    return () => clearInterval(interval);
   }, []);
-
-  
 
   // filtra pela busca
   const filtered = useMemo(

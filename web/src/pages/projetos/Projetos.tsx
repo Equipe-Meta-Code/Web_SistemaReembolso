@@ -12,13 +12,13 @@ import api from '../../services/api';
 
 interface Categoria {
   _id: string;
-  categoriaId: string;
+  categoriaId: number; // ajuste conforme modelo
   nome: string;
 }
 
 interface Departamento {
   _id: string;
-  departamentoId: string;
+  departamentoId: number;
   nome: string;
 }
 
@@ -31,7 +31,6 @@ interface ProjetosProps {
     setTitulo: (titulo: string) => void;
     setShowSearch: (show: boolean) => void;
 }
-
 
 export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     const [nomeProjeto, setNomeProjeto] = useState('');
@@ -51,16 +50,23 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
 
     useEffect(() => {
         setTitulo('Cadastro de Projetos');
-        setShowSearch(false);     
+        setShowSearch(false);
         const fetchData = async () => {
             try {
                 const [catRes, depRes, funcRes] = await Promise.all([
-                    api.get<Categoria[]>('/categorias'),
-                    api.get<Departamento[]>('/departamentos'),
-                    api.get<{ users: Funcionario[] }>('/userList'),
+                    api.get('/categorias'),
+                    api.get('/departamentos'),
+                    api.get('/userList'),
                 ]);
-                setListaCategorias(catRes.data);
-                setListaDepartamentos(depRes.data);
+                // extrai corretamente arrays quando payload é { message, alertType, categorias/departamentos }
+                const rawCats = Array.isArray(catRes.data)
+                    ? catRes.data
+                    : catRes.data.categorias;
+                const rawDeps = Array.isArray(depRes.data)
+                    ? depRes.data
+                    : depRes.data.departamentos;
+                setListaCategorias(rawCats);
+                setListaDepartamentos(rawDeps);
                 setListaFuncionarios(funcRes.data.users);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -83,7 +89,6 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
         arr[index] = valor;
         setDepartamentosInput(arr);
     };
-    // -----------------------------------------
 
     const adicionarCategoria = () =>
         setCategoriasInput([...categoriasInput, { categoriaId: '', valorMaximo: '' }]);
@@ -136,7 +141,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
         }
 
         const categorias = categoriasInput.map((c) => {
-            const cat = listaCategorias.find((x) => x.categoriaId === c.categoriaId);
+            const cat = listaCategorias.find((x) => String(x.categoriaId) === c.categoriaId);
             return {
                 categoriaId: c.categoriaId,
                 nome: cat?.nome || 'Desconhecida',
@@ -144,9 +149,8 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
             };
         });
 
-        // monta array de departamentos
         const departamentos = departamentosInput.map((depId) => {
-            const d = listaDepartamentos.find((x) => x.departamentoId === depId);
+            const d = listaDepartamentos.find((x) => String(x.departamentoId) === depId);
             return {
                 departamentoId: depId,
                 nome: d?.nome ?? 'Desconhecido',
@@ -211,7 +215,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
                                 <List.Accordion
                                     key={idx}
                                     title={
-                                        listaDepartamentos.find((d) => d.departamentoId === item)
+                                        listaDepartamentos.find((d) => String(d.departamentoId) === item)
                                             ?.nome || 'Escolha o Departamento'
                                     }
                                     style={styles.field}
@@ -227,7 +231,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
                                             key={d._id}
                                             title={d.nome}
                                             onPress={() => {
-                                                atualizarDepartamento(idx, d.departamentoId);
+                                                atualizarDepartamento(idx, String(d.departamentoId));
                                                 setExpandedDepartamentos(null);
                                             }}
                                         />
@@ -248,7 +252,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
                                     <View style={{ flex: 1 }}>
                                         <List.Accordion
                                             title={
-                                                listaCategorias.find((c) => c.categoriaId === item.categoriaId)
+                                                listaCategorias.find((c) => String(c.categoriaId) === item.categoriaId)
                                                     ?.nome || 'Escolha a Categoria'
                                             }
                                             style={styles.field}
@@ -267,7 +271,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
                                                         atualizarCategoria(
                                                             idx,
                                                             'categoriaId',
-                                                            c.categoriaId
+                                                            String(c.categoriaId)
                                                         );
                                                         setExpandedCategorias(null);
                                                     }}
@@ -338,7 +342,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
 
                             <Card style={styles.totalCard}>
                                 <Card.Content>
-                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>                                
+                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>
                                 </Card.Content>
                             </Card>
 
@@ -361,19 +365,10 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     );
 }
 
-const coresCategoria = ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#f44336'];
-
 const styles = StyleSheet.create({
     container: {
         padding: 16,
         backgroundColor: '#ffffff',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1976d2',
-        marginBottom: 16,
-        textAlign: 'center',
     },
     card: {
         padding: 8,
@@ -388,23 +383,23 @@ const styles = StyleSheet.create({
     rightSide: {
         marginTop: 24,
     },
-    field: { // novo estilo unificado
+    field: {
         backgroundColor: '#ffffff',
         borderColor: '#cccccc',
         borderWidth: 1,
-        borderRadius: 8, // bordas levemente arredondadas
-        height: 45, // altura padrão para inputs e selects
-        justifyContent: 'center', // para alinhar o texto verticalmente no select
+        borderRadius: 8,
+        height: 45,
+        justifyContent: 'center',
         paddingHorizontal: 12,
         marginBottom: 12,
     },
-    input: { // novo estilo unificado
-        backgroundColor: '',
+    input: {
+        backgroundColor: '#ffffff',
         borderColor: '#cccccc',
         borderWidth: 1,
-        borderRadius: 8, // bordas levemente arredondadas
-        height: 45, // altura padrão para inputs e selects
-        justifyContent: 'center', // para alinhar o texto verticalmente no select
+        borderRadius: 8,
+        height: 45,
+        justifyContent: 'center',
         paddingHorizontal: 12,
         marginBottom: 12,
     },
@@ -430,28 +425,6 @@ const styles = StyleSheet.create({
         borderColor: '#cccccc',
         borderWidth: 1,
         borderRadius: 10,
-    },
-    valorItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    bolinha: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        marginRight: 8,
-    },
-    valorTexto: {
-        fontSize: 16,
-    },
-    barContainer: {
-        flexDirection: 'row',
-        marginTop: 8,
-        backgroundColor: '#e0e0e0',
-        height: 20,
-        borderRadius: 10,
-        overflow: 'hidden',
     },
     cadastrarButton: {
         backgroundColor: '#1F48AA',
