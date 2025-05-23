@@ -14,10 +14,14 @@ const MENU_ITEMS: { name: keyof RootStackParamList; icon: string; label: string 
   { name: "Funcionarios", icon: "person-outline",     label: "Funcionarios" },
   { name: "Categorias",  icon: "bag-handle-outline", label: "Categorias" },
   { name: "Projetos",    icon: "analytics-outline",  label: "Projetos" },
-  { name: "Departamentos", icon: "exit-outline",     label: "Departamentos" },
+  { name: "Departamentos", icon: "git-network-outline",     label: "Departamentos" },
 ];
 
-export default function Menu() {
+interface MenuProps {
+  onLogout: () => void;
+}
+
+export default function Menu({ onLogout }: MenuProps) {
   const navigation = useNavigation<NavProp>();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -54,6 +58,11 @@ export default function Menu() {
                 onPress={() => navigation.navigate(item.name)}
               />
             ))}
+              <BotaoMenu
+                nomeBotao="Logout"
+                iconName= "exit-outline"
+                onPress={onLogout} 
+              />
           </View>
         </>
       )}
@@ -81,6 +90,17 @@ export default function Menu() {
               />
             </TouchableOpacity>
           ))}
+
+            <TouchableOpacity 
+              style={style.botaoIcone}
+              onPress={onLogout} 
+            >
+              <Ionicons 
+                name="log-out-outline" 
+                size={24} 
+                color="#151D48" 
+              />
+            </TouchableOpacity>
         </View>
       )}
     </View>

@@ -37,10 +37,15 @@ export default function App() {
     );
   }
 
+  async function logout() {
+    await AsyncStorage.removeItem('token');
+    setIsAuthenticated(false);
+  }
+  
   return (
     <NavigationContainer>
       <View style={{ flexDirection: 'row', flex: 1 }}>
-        <Menu />
+        <Menu onLogout={logout} />
         <View style={{ flex: 1 }}>
           <Navbar 
             onTextChange={setFiltro} 
