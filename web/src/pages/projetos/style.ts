@@ -13,4 +13,9 @@ export default StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 8,
     },
+    filtroTexto: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 4,
+  },
 });
