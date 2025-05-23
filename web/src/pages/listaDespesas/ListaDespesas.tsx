@@ -1,4 +1,3 @@
-// src/pages/listaDespesas/ListaDespesas.tsx
 import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
@@ -131,35 +130,44 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
     );
 
   const pacotesFiltrados = pacotes.filter(p => {
+    const funcionariosValidos = funcionariosSelecionados.filter(f => typeof f === 'number' && !isNaN(f));
+    const projetosValidos = projetosSelecionados.filter(pj => typeof pj === 'number' && !isNaN(pj));
+
+    const okUser =
+      funcionariosValidos.length === 0 ? true : funcionariosValidos.includes(p.userId);
+    const okProjeto =
+      projetosValidos.length === 0 ? true : projetosValidos.includes(p.projetoId);
+
     const okStatus = !statusSelecionados.length || statusSelecionados.includes(p.status);
-    const okUser = !funcionariosSelecionados.length || funcionariosSelecionados.includes(p.userId);
-    const okProjeto = !projetosSelecionados.length || projetosSelecionados.includes(p.projetoId);
+
     return okStatus && okUser && okProjeto;
   });
 
-  // Funções para adicionar/remover dropdowns
   const addFuncionarioDropdown = () => setFuncionariosDropdowns(prev => [...prev, prev.length]);
-  const removeFuncionarioDropdown = (idx: number) =>
-    setFuncionariosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
-
   const addProjetoDropdown = () => setProjetosDropdowns(prev => [...prev, prev.length]);
-  const removeProjetoDropdown = (idx: number) =>
-    setProjetosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
 
-  // Atualiza seleção de funcionário/projeto por dropdown
-  const setFuncionarioSelecionado = (idx: number, userId: number) => {
+  const setFuncionarioSelecionado = (idx: number, userId: number | string) => {
     setFuncionariosSelecionados(prev => {
       const novo = [...prev];
-      novo[idx] = userId;
-      return novo;
+      novo[idx] = userId === "" ? NaN : Number(userId);
+      return novo as number[];
     });
   };
-  const setProjetoSelecionado = (idx: number, projetoId: number) => {
+  const setProjetoSelecionado = (idx: number, projetoId: number | string) => {
     setProjetosSelecionados(prev => {
       const novo = [...prev];
-      novo[idx] = projetoId;
-      return novo;
+      novo[idx] = projetoId === "" ? NaN : Number(projetoId);
+      return novo as number[];
     });
+  };
+
+  const removeFuncionarioDropdown = (idx: number) => {
+    setFuncionariosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+    setFuncionariosSelecionados(prev => prev.filter((_, i) => i !== idx));
+  };
+  const removeProjetoDropdown = (idx: number) => {
+    setProjetosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+    setProjetosSelecionados(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -205,7 +213,6 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
           </View>
         </View>
 
-        {/* Funcionários com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
           <View>
@@ -232,7 +239,6 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
           </View>
         </View>
 
-        {/* Projetos com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Projetos:</Text>
           <View>
@@ -278,6 +284,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                 comprovante:
                   'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
               }));
+
               return (
                 <Card
                   key={p._id}
@@ -297,6 +304,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                 />
               );
             })}
+
           </View>
         );
       })}
