@@ -84,7 +84,7 @@ export default function CardProjeto({
       {visivel && (
         <View style={isWide ? styles.tableContainer : styles.cardContainer}>
           {/* Categorias */}
-          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Categorias</Text>
+          <Text style={[styles.tituloSecao, { marginTop: 16 }]}>Categorias</Text>
           {projeto.categorias.map(cat => {
             const bg = categoriaCoresFundo[cat.nome] || 'rgba(229, 231, 255, 1)';
             const text = categoriaCoresTexto[cat.nome] || 'rgba(76, 77, 220, 1)';
@@ -92,7 +92,7 @@ export default function CardProjeto({
               <View key={cat._id} style={[styles.cardItem, { marginBottom: 8 }]}>
                 <Label text={cat.nome} color={{ bg, text }} />
                 <Text style={styles.subtitle}>
-                  Valor máximo: R$ {cat.valor_maximo.toFixed(2)}
+                  Valor máximo: R$ {cat.valor_maximo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
               </View>
             );
@@ -103,7 +103,7 @@ export default function CardProjeto({
             onPress={() => setVerDepartamentos(!verDepartamentos)}
             style={styles.sectionToggle}
           >
-            <Text style={styles.sectionTitle}>Departamentos</Text>
+            <Text style={styles.tituloSecao}>Departamentos</Text>
             <Ionicons
               name={verDepartamentos ? 'chevron-up-outline' : 'chevron-down-outline'}
               size={20}
@@ -126,7 +126,7 @@ export default function CardProjeto({
             onPress={() => setVerFuncionarios(!verFuncionarios)}
             style={styles.sectionToggle}
           >
-            <Text style={styles.sectionTitle}>Funcionários</Text>
+            <Text style={styles.tituloSecao}>Funcionários</Text>
             <Ionicons
               name={verFuncionarios ? 'chevron-up-outline' : 'chevron-down-outline'}
               size={20}
