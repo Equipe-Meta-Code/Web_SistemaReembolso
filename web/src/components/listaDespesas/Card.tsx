@@ -69,9 +69,11 @@ interface CardProps {
   onAprovacaoChange: () => void;
 }
 
-const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
-  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>  
+// Label que indica status e customização
+const Label: React.FC<{ text: string; color: { bg: string; text: string }; customized?: boolean }> = ({ text, color, customized = false }) => (
+  <View style={[styles.labelContainer, { backgroundColor: color.bg, flexDirection: 'row', alignItems: 'center' }]}>  
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
+    {customized && <View style={styles.customBadge} />}
   </View>
 );
 
@@ -85,7 +87,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
   const valorTotal = despesas.reduce((acc, d) => acc + d.valor_gasto, 0);
   const allSelected = despesas.length > 0 && despesas.every(d => localApprovals[d._id] !== undefined);
 
-  // Calcula o status exibido considerando edições locais
+  // Deriva o status do pacote considerando seleções locais
   const deriveStatus = (): string => {
     if (customMode && Object.keys(localApprovals).length === despesas.length) {
       const vals = Object.values(localApprovals);
@@ -195,7 +197,9 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
                 </View>
                 <View style={[styles.cell, styles.aprovacao]}>
                   {customMode ? (
-                    <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      {/* Mostra label customizado antes dos ícones */}
+                      <Label text={labelText} color={aprovColor} customized={!!local} />
                       <TouchableOpacity style={styles.aprovacaoToggle} onPress={() => toggleApproval(d._id, 'Aprovado')}>
                         <AntDesign name="checkcircleo" size={18} />
                       </TouchableOpacity>

@@ -128,5 +128,13 @@ export default StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     
-  }
+  },
+  customBadge: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFC107',
+    marginLeft: 4,
+  },
+
 });
