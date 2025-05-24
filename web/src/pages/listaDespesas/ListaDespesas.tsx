@@ -44,7 +44,7 @@ interface ListaDespesasProps {
   setShowSearch: (show: boolean) => void;
 }
 
-const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado'] as const;
+const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado', 'Aprovado Parcialmente'] as const;
 type Secao = typeof SECOES[number];
 
 const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setShowSearch }) => {
@@ -300,7 +300,6 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                     }))
                   }
                   onAprovacaoChange={fetchData}
-                  comprovante={''}
                 />
               );
             })}
