@@ -8,6 +8,7 @@ import {
   Linking,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import api from '../../services/api';
 import styles from './style';
 
@@ -31,6 +32,7 @@ const categoriaCoresTexto: Record<string, string> = {
 };
 
 const statusColors = {
+  customizado:               { bg: '#d8d8d8',                     text: '#2c2c2c' },
   aprovado:               { bg: '#d4f5e9',                     text: '#2e7d32' },
   recusado:               { bg: '#ffe5e5',                     text: '#c62828' },
   'aguardando aprovação': { bg: 'rgba(255, 188, 20, 0.21)',     text: 'rgba(214, 154, 1, 0.96)' },
@@ -93,8 +95,6 @@ export default function Card({
   // calcula o total de todas as despesas deste pacote
   const valorTotal = despesas.reduce((acc, d) => acc + d.valor_gasto, 0);
 
-  const toggleDropdown = (id: string) =>
-    setOpenDespesaId(prev => (prev === id ? null : id));
 
   const updateAprovacao = async (id: string, aprov: string) => {
     try {
@@ -152,17 +152,25 @@ export default function Card({
             <Text style={styles.title}>{pacote.nome}</Text>
             <View style={styles.statusButtonsContainer}>
               <TouchableOpacity
+                style={[styles.statusButton, { backgroundColor: statusColors.customizado.bg }]}
+                onPress={() => updateStatusPacote('Aprovado')}
+              >
+                <Text style={[styles.statusButtonText, { color: statusColors.customizado.text }]}>Customizado</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={[styles.statusButton, { backgroundColor: statusColors.aprovado.bg }]}
                 onPress={() => updateStatusPacote('Aprovado')}
               >
                 <Text style={[styles.statusButtonText, { color: statusColors.aprovado.text }]}>Aprovar</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={[styles.statusButton, { backgroundColor: statusColors.recusado.bg }]}
                 onPress={() => updateStatusPacote('Recusado')}
               >
                 <Text style={[styles.statusButtonText, { color: statusColors.recusado.text }]}>Rejeitar</Text>
               </TouchableOpacity>
+
               <Ionicons
                 name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
                 size={24}
@@ -227,56 +235,61 @@ export default function Card({
 
             return (
               <View key={d._id} style={isWide ? styles.tableRow : styles.cardItem}>
+
                 <View style={[styles.cell, styles.categoria]}>
                   <Label text={d.categoria} color={{ bg: bgCategoria, text: textCategoria }} />
                 </View>
+
                 <Text style={[styles.cell, styles.data]}>
                   {new Date(d.data).toLocaleDateString('pt-BR', {
                     day: 'numeric', month: 'long', year: 'numeric'
                   })}
                 </Text>
+
                 <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
+
                 <Text style={[styles.cell, styles.descricao]}>{d.descricao}</Text>
+
                 <View style={[styles.cell, styles.descricao]}>
-                <TouchableOpacity
-                  style={styles.comprovanteButton}
-                  onPress={() => { if (d.comprovante) Linking.openURL(d.comprovante); }}>
-                  <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
-                </TouchableOpacity>
-              </View>
+
+                  <TouchableOpacity
+                    style={styles.comprovanteButton}
+                    onPress={() => { if (d.comprovante) Linking.openURL(d.comprovante); }}
+                  >
+                    <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
+                  </TouchableOpacity>
+
+                </View>
+
                 <View style={[styles.cell, styles.aprovacao]}>
-                  <View style={{ position: 'relative' }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', position: 'relative' }}>
+                    <Label text={label} color={aprovColor} />
                     <TouchableOpacity
                       style={styles.aprovacaoToggle}
-                      onPress={() => toggleDropdown(d._id)}
                       activeOpacity={0.7}
                     >
-                      <Label text={label} color={aprovColor} />
-                      <Ionicons
-                        name="chevron-down-outline"
-                        size={16}
+                      <AntDesign
+                        name="checkcircleo"
+                        size={18}
                         style={{ marginLeft: 4 }}
                       />
                     </TouchableOpacity>
-                    {openDespesaId === d._id && (
-                      <View style={[styles.selectContainer, { position: 'absolute', top: 30, right: 0, zIndex: 1001, elevation: 25 }]}>  
 
-                        {['Aprovado', 'Recusado'].map(opt => (
-                          <TouchableOpacity
-                            key={opt}
-                            style={styles.selectItem}
-                            onPress={() => updateAprovacao(d._id, opt)}
-                          >
-                            <Text style={[styles.selectItemText, { color: statusColors[opt.toLowerCase() as StatusKey].text }]}>
-                              {opt}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
+                    <TouchableOpacity
+                      style={styles.aprovacaoToggle}
+                      activeOpacity={0.7}
+                    >
+                      <AntDesign
+                        name="closecircleo"
+                        size={18}
+                        style={{ marginLeft: 4 }}
+                      />
+                    </TouchableOpacity>
+
                   </View>
                 </View>
               </View>
+              
             );
           })}
         </View>

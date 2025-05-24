@@ -62,7 +62,7 @@ export default StyleSheet.create({
   data: { flex: 2 },
   valor: { flex: 1.5 },
   usuario: { flex: 2 },
-  descricao: { flex: 3 },
+  descricao: { flex: 2 },
   comprovante: { flex: 2 },
   aprovacao: { flex: 1.5 },
   aprovacaoToggle: {
@@ -124,5 +124,9 @@ export default StyleSheet.create({
     fontWeight: '500',
     fontSize: 13,
   },
-  
+  aprovar: {
+    display: 'flex',
+    flexDirection: 'row',
+    
+  }
 });
