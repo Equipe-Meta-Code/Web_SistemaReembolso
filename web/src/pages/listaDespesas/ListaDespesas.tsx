@@ -264,7 +264,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
               ))}
             </View>
             <Pressable onPress={addFuncionarioDropdown} style={{ marginTop: 4 }}>
-              <Text style={{ color: 'blue' }}>+ Adicionar Funcionário</Text>
+              <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Funcionário</Text>
             </Pressable>
           </View>
         </View>
@@ -292,7 +292,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
               ))}
             </View>
             <Pressable onPress={addProjetoDropdown} style={{ marginTop: 4 }}>
-              <Text style={{ color: 'blue' }}>+ Adicionar Projeto</Text>
+              <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Projeto</Text>
             </Pressable>
           </View>
         </View>

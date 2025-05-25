@@ -58,4 +58,7 @@ export default StyleSheet.create({
     marginTop: 10,
     alignItems: 'center',
   },
+  botaoAdicionarFiltro: {
+    color: '#1F48AA',
+  },
 });

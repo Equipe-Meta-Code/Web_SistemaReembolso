@@ -29,4 +29,14 @@ export default StyleSheet.create({
         fontSize: 16,
         marginTop: 4,
     },
-});
+    selecaoFiltro: {
+        width: 180,
+        padding: 10,
+        borderRadius: 20,
+        marginTop: 10,
+        alignItems: 'center',
+    },
+    botaoAdicionarFiltro: {
+        color: '#1F48AA',
+    },
+    });

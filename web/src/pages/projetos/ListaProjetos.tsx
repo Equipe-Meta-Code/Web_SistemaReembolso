@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
 import styles from './style';
 import CardProjeto from '../../components/listaProjetos/CardProjeto';
@@ -143,7 +144,6 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Filtro por nome do projeto */}
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.filtroTexto}>Nome do Projeto:</Text>
           <TextInput
@@ -155,7 +155,6 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
           />
         </View>
 
-        {/* Filtro de Funcionários */}
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
           {funcionariosDropdowns.map((_, idx) => (
@@ -165,7 +164,7 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
             >
               <Picker
                 selectedValue={funcionariosSelecionados[idx] ?? ''}
-                style={{ width: 200, height: 40 }}
+                style={styles.selecaoFiltro}
                 onValueChange={value => setFuncionarioSelecionado(idx, value)}
               >
                 <Picker.Item label="Selecione" value="" />
@@ -177,12 +176,12 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
                 onPress={() => removeFuncionarioDropdown(idx)}
                 style={{ marginLeft: 8 }}
               >
-                <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
+                <Ionicons name="remove-circle-outline" size={24} color="red" />
               </Pressable>
             </View>
           ))}
           <Pressable onPress={addFuncionarioDropdown}>
-            <Text style={{ color: '#007bff' }}>+ Adicionar Funcionário</Text>
+            <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Funcionário</Text>
           </Pressable>
         </View>
 
