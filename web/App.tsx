@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react';
+// App.tsx
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View } from 'react-native';
+
+import AuthStack from './src/routes/AuthStack';
 import Menu from './src/components/layout/Menu';
 import Navbar from './src/components/layout/Navbar';
 import { Routes } from './src/routes/routes';
-import { View } from 'react-native';
-import Login from './src/pages/login/Login';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [filtro, setFiltro] = useState('');
   const [titulo, setTitulo] = useState('Lista de Despesas');
   const [showSearch, setShowSearch] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
     async function checkToken() {
@@ -25,41 +27,34 @@ export default function App() {
     checkToken();
   }, []);
 
-  if (loadingAuth) {
-    return null; 
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <NavigationContainer>
-        <Login onLogin={() => setIsAuthenticated(true)} />
-      </NavigationContainer>
-    );
-  }
+  if (loadingAuth) return null;
 
   async function logout() {
     await AsyncStorage.removeItem('token');
     setIsAuthenticated(false);
   }
-  
+
   return (
     <NavigationContainer>
-      <View style={{ flexDirection: 'row', flex: 1 }}>
-        <Menu onLogout={logout} />
-        <View style={{ flex: 1 }}>
-          <Navbar 
-            onTextChange={setFiltro} 
-            titulo={titulo} 
-            showSearch={showSearch} 
-          />
-          <Routes 
-            filtro={filtro} 
-            setTitulo={setTitulo} 
-            setShowSearch={setShowSearch} 
-          />
+      {!isAuthenticated ? (
+        <AuthStack onLogin={() => setIsAuthenticated(true)} />
+      ) : (
+        <View style={{ flexDirection: 'row', flex: 1 }}>
+          <Menu onLogout={logout} />
+          <View style={{ flex: 1 }}>
+            <Navbar 
+              onTextChange={setFiltro} 
+              titulo={titulo} 
+              showSearch={showSearch} 
+            />
+            <Routes 
+              filtro={filtro} 
+              setTitulo={setTitulo} 
+              setShowSearch={setShowSearch} 
+            />
+          </View>
         </View>
-      </View>
+      )}
     </NavigationContainer>
   );
 }
-
