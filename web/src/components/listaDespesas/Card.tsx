@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
   View,
   Text,
@@ -32,14 +33,16 @@ const categoriaCoresTexto: Record<string, string> = {
 
 const statusColors = {
   customizado:              { bg: '#d8d8d8',                 text: '#2c2c2c' },
-  salvar:              { bg: '#d9e8ff',                 text: '#113dff' },
+  salvar:                   { bg: '#d9e8ff',                 text: '#113dff' },
   aprovado:                 { bg: '#d4f5e9',                 text: '#2e7d32' },
   recusado:                 { bg: '#ffe5e5',                 text: '#c62828' },
-  'aguardando aprovação':  { bg: 'rgba(255, 188, 20, 0.21)', text: 'rgba(214, 154, 1, 0.96)' },
-  'aprovado parcialmente': { bg: '#fff3cd',                 text: '#856404' },
+  'aguardando aprovação':   { bg: 'rgba(255, 188, 20, 0.21)', text: 'rgba(214, 154, 1, 0.96)' },
+  'aprovado parcialmente':  { bg: '#fff3cd',                 text: '#856404' },
 } as const;
 
 type StatusKey = keyof typeof statusColors;
+
+type Approval = 'Aprovado' | 'Recusado' | 'Pendente';
 
 interface Pacote { _id: string; pacoteId: number; nome: string; status: string; }
 interface Despesa { _id: string; data: string; valor_gasto: number; descricao: string; aprovacao: string; categoria: string; comprovante?: string; }
@@ -68,15 +71,17 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
   const isWide = width >= 1220;
 
   const [customMode, setCustomMode] = useState(false);
-  const [localApprovals, setLocalApprovals] = useState<Record<string, 'Aprovado' | 'Recusado'>>({});
+  const [localApprovals, setLocalApprovals] = useState<Record<string, Approval>>({});
 
   const valorTotal = despesas.reduce((acc, d) => acc + d.valor_gasto, 0);
   const allSelected = despesas.length > 0 && despesas.every(d => localApprovals[d._id] !== undefined);
 
   const handleCustom = () => {
-    const initial: Record<string, 'Aprovado' | 'Recusado'> = {};
+    const initial: Record<string, Approval> = {};
     despesas.forEach(d => {
-      initial[d._id] = d.aprovacao === 'Aprovado' ? 'Aprovado' : 'Recusado';
+      if (d.aprovacao === 'Aprovado') initial[d._id] = 'Aprovado';
+      else if (d.aprovacao === 'Recusado') initial[d._id] = 'Recusado';
+      else initial[d._id] = 'Pendente';
     });
     setLocalApprovals(initial);
     setCustomMode(true);
@@ -91,6 +96,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
     }
     return pacote.status;
   };
+
   const displayStatus = deriveStatus();
   const statusKey = displayStatus.trim().toLowerCase() as StatusKey;
 
@@ -127,7 +133,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
   };
 
   return (
-    <View style={[styles.wrapper, { overflow: 'visible' }]}>      
+    <View style={[styles.wrapper, { overflow: 'visible' }]}>       
       <TouchableOpacity style={styles.header} onPress={alternarVisibilidade} activeOpacity={0.7}>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -166,7 +172,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
       </TouchableOpacity>
 
       {visivel && (
-        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>  
+        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>   
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
@@ -178,12 +184,14 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
             </View>
           )}
           {despesas.map(d => {
-            const local = localApprovals[d._id];
-            const labelText = local || d.aprovacao;
-            const labelKey = labelText.toLowerCase() as StatusKey;
-            const aprovColor = statusColors[labelKey];
+            const local = localApprovals[d._id] || d.aprovacao;
+            const labelText = local;
+            const labelKey = labelText.trim().toLowerCase() as StatusKey;
+            const aprovColor = statusColors[labelKey] || { bg: 'rgba(255, 188, 20, 0.21)', text: 'rgba(214, 154, 1, 0.96)' };
             const bgCategoria = categoriaCoresFundo[d.categoria] || 'rgba(229, 231, 255, 1)';
             const textCategoria = categoriaCoresTexto[d.categoria] || 'rgba(76, 77, 220, 1)';
+            const approvedSelected = localApprovals[d._id] === 'Aprovado';
+            const rejectedSelected = localApprovals[d._id] === 'Recusado';
 
             return (
               <View key={d._id} style={isWide ? styles.tableRow : styles.cardItem}>
@@ -201,12 +209,12 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
                 <View style={[styles.cell, styles.aprovacao]}>
                   {customMode ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Label text={labelText} color={aprovColor} customized={!!local} />
+                      <Label text={labelText} color={aprovColor} customized={!!localApprovals[d._id]} />
                       <TouchableOpacity style={styles.aprovacaoToggle} onPress={() => toggleApproval(d._id, 'Aprovado')}>
-                        <AntDesign name="checkcircleo" size={18} />
+                        <AntDesign name="checkcircleo" size={18} color={approvedSelected ? statusColors.aprovado.text : '#474747'} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.aprovacaoToggle} onPress={() => toggleApproval(d._id, 'Recusado')}>
-                        <AntDesign name="closecircleo" size={18} />
+                        <AntDesign name="closecircleo" size={18} color={rejectedSelected ? statusColors.recusado.text : '#474747'} />
                       </TouchableOpacity>
                     </View>
                   ) : (
