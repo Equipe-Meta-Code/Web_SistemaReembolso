@@ -10,6 +10,7 @@ import Card from '../../components/listaDespesas/Card';
 import api from '../../services/api';
 import styles from './style';
 import { Picker } from '@react-native-picker/picker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface Pacote {
   _id: string;
@@ -47,7 +48,6 @@ interface ListaDespesasProps {
 const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado', 'Aprovado Parcialmente'] as const;
 type Secao = typeof SECOES[number];
 
-// Cores definidas inline para cada status
 const statusStyles: Record<Secao, { backgroundColor: string; color: string }> = {
   'Aguardando Aprovação': {
     backgroundColor: 'rgba(255, 188, 20, 0.21)',
@@ -222,7 +222,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                   onPress={() => toggleStatus(s)}
                   style={[
                     styles.containerOpcao,
-                    { backgroundColor: selected ? selectedBg : statusStyles[s].backgroundColor },
+                    { backgroundColor: selected ? selectedBg : statusStyles[s].backgroundColor, borderRadius: 20, borderWidth: 1, borderColor: statusStyles[s].backgroundColor },
                   ]}
                 >
                   <Text
@@ -256,7 +256,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                   ))}
                 </Picker>
                 <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
+                  <Ionicons name="remove-circle-outline" size={24} color="red" />
                 </Pressable>
               </View>
             ))}
@@ -282,7 +282,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                   ))}
                 </Picker>
                 <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
+                  <Ionicons name="remove-circle-outline" size={24} color="red" />
                 </Pressable>
               </View>
             ))}
