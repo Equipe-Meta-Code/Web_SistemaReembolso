@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import { style } from "./style";
 import api from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -57,13 +58,25 @@ export default function Login({ onLogin }: LoginProps) {
           keyboardType="email-address"
         />
 
-        <TextInput
-          style={style.input}
-          placeholder="Senha"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={style.inputContainer}>
+          <TextInput
+            style={style.input}
+            placeholder="Senha"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={secureText}
+          />
+          <TouchableOpacity
+            onPress={() => setSecureText(!secureText)}
+            style={style.iconButton}
+          >
+            <Feather
+              name={secureText ? 'eye' : 'eye-off'}
+              size={20}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={style.botao} onPress={getLogin}>
           <Text style={style.textoBotao}>Entrar</Text>
