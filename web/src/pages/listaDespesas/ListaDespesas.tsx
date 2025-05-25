@@ -47,6 +47,30 @@ interface ListaDespesasProps {
 const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado', 'Aprovado Parcialmente'] as const;
 type Secao = typeof SECOES[number];
 
+// Cores definidas inline para cada status
+const statusStyles: Record<Secao, { backgroundColor: string; color: string }> = {
+  'Aguardando Aprovação': {
+    backgroundColor: 'rgba(255, 188, 20, 0.21)',
+    color: 'rgba(214, 154, 1, 0.96)',
+  },
+  Recusado: {
+    backgroundColor: 'rgba(209, 53, 53, 0.15)',
+    color: 'rgba(185, 14, 14, 0.70)',
+  },
+  Aprovado: {
+    backgroundColor: 'rgba(27, 143, 37, 0.15)',
+    color: 'rgba(4, 155, 12, 0.83)',
+  },
+  'Aprovado Parcialmente': {
+    backgroundColor: 'rgba(255, 139, 62, 0.21)',
+    color: 'rgba(248, 103, 7, 0.69)',
+  },
+};
+
+// Cores de seleção
+const selectedBg = 'rgba(173, 216, 230, 0.4)';
+const selectedColor = 'rgba(0, 0, 139, 1)';
+
 const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setShowSearch }) => {
   const [pacotes, setPacotes] = useState<Pacote[]>([]);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
@@ -190,26 +214,29 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Status:</Text>
           <View style={styles.opcoesFiltro}>
-            {SECOES.map(s => (
-              <Pressable
-                key={s}
-                onPress={() => toggleStatus(s)}
-                style={[
-                  styles.containerOpcao,
-                  statusSelecionados.includes(s) && styles.filtroSelecionado,
-                ]}
-              >
-                <Text
-                  style={
-                    statusSelecionados.includes(s)
-                      ? styles.textoFiltroSelecionado
-                      : styles.textoOpcao
-                  }
+            {SECOES.map(s => {
+              const selected = statusSelecionados.includes(s);
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => toggleStatus(s)}
+                  style={[
+                    styles.containerOpcao,
+                    { backgroundColor: selected ? selectedBg : statusStyles[s].backgroundColor },
+                  ]}
                 >
-                  {s}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={
+                      selected
+                        ? { ...styles.textoFiltroSelecionado, color: selectedColor } 
+                        : { ...styles.textoOpcao, color: statusStyles[s].color }
+                    }
+                  >
+                    {s}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -297,8 +324,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                     setMostrarPacote(prev => ({
                       ...prev,
                       [p._id]: !prev[p._id],
-                    }))
-                  }
+                    }))}
                   onAprovacaoChange={fetchData}
                 />
               );
