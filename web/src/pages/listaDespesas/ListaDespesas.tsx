@@ -243,23 +243,26 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
           <View>
-            {funcionariosDropdowns.map((_, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Picker
-                  selectedValue={funcionariosSelecionados[idx] ?? ''}
-                  style={{ width: 180, height: 40 }}
-                  onValueChange={value => setFuncionarioSelecionado(idx, value)}
-                >
-                  <Picker.Item label="Selecione" value="" />
-                  {usuarios.map(u => (
-                    <Picker.Item key={u.userId} label={u.name} value={u.userId} />
-                  ))}
-                </Picker>
-                <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Ionicons name="remove-circle-outline" size={24} color="red" />
-                </Pressable>
-              </View>
-            ))}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+
+              {funcionariosDropdowns.map((_, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Picker
+                    selectedValue={funcionariosSelecionados[idx] ?? ''}
+                    style={styles.selecaoFiltro}
+                    onValueChange={value => setFuncionarioSelecionado(idx, value)}
+                  >
+                    <Picker.Item label="Selecione" value="" />
+                    {usuarios.map(u => (
+                      <Picker.Item key={u.userId} label={u.name} value={u.userId} />
+                    ))}
+                  </Picker>
+                  <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
+                    <Ionicons name="remove-circle-outline" size={24} color="red" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={addFuncionarioDropdown} style={{ marginTop: 4 }}>
               <Text style={{ color: 'blue' }}>+ Adicionar Funcionário</Text>
             </Pressable>
@@ -269,23 +272,25 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Projetos:</Text>
           <View>
-            {projetosDropdowns.map((_, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Picker
-                  selectedValue={projetosSelecionados[idx] ?? ''}
-                  style={{ width: 180, height: 40 }}
-                  onValueChange={value => setProjetoSelecionado(idx, value)}
-                >
-                  <Picker.Item label="Selecione" value="" />
-                  {projetos.map(p => (
-                    <Picker.Item key={p.projetoId} label={p.nome} value={p.projetoId} />
-                  ))}
-                </Picker>
-                <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Ionicons name="remove-circle-outline" size={24} color="red" />
-                </Pressable>
-              </View>
-            ))}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {projetosDropdowns.map((_, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Picker
+                    selectedValue={projetosSelecionados[idx] ?? ''}
+                    style={styles.selecaoFiltro}
+                    onValueChange={value => setProjetoSelecionado(idx, value)}
+                  >
+                    <Picker.Item label="Selecione" value="" />
+                    {projetos.map(p => (
+                      <Picker.Item key={p.projetoId} label={p.nome} value={p.projetoId} />
+                    ))}
+                  </Picker>
+                  <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
+                    <Ionicons name="remove-circle-outline" size={24} color="red" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={addProjetoDropdown} style={{ marginTop: 4 }}>
               <Text style={{ color: 'blue' }}>+ Adicionar Projeto</Text>
             </Pressable>
