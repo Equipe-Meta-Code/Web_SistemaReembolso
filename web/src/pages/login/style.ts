@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 export const style = StyleSheet.create({
     container: {
@@ -59,6 +59,67 @@ export const style = StyleSheet.create({
         alignItems: "center",
         marginTop: 10,
         marginBottom: 50,
+    },
+
+    inputGroup: {
+        width: '100%',
+        gap: 16,
+        paddingHorizontal: 10,
+        marginTop: 60,
+    },
+    resendText: {
+        marginTop: 16,
+        color: '#1F48AA',
+        textAlign: 'center',
+        textDecorationLine: 'underline',
+        fontSize: 14,
+    },
+    boxTop: {
+        height: Dimensions.get('window').height / 5,
+        width: '100%',
+        backgroundColor: '#1F48AA',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+    },
+    boxMid: {
+        flex: 1,
+        backgroundColor: '#1F48AA',
+        width: '100%',
+        paddingTop: 20,
+        paddingHorizontal: 20,
+    },
+    description: {
+        fontSize: 16,    
+        color: '#1F48AA',  
+        textAlign: 'left',  
+        marginTop: 10,  
+        paddingLeft:20
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    inputContainer: {
+        position: 'relative',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    iconButton: {
+        position: 'absolute',
+        right: 12,
+        marginTop: 5,
+        transform: [{ translateY: -10 }],
+        padding: 4,
+    },
+    erroTexto: {
+        color: 'red',
+        fontSize: 14,
+        marginTop: 10,
+        marginBottom: 10,
+        textAlign: 'center',
     },
 
 });
