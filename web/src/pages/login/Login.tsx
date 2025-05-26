@@ -28,7 +28,7 @@ export default function Login() {
     try {
       const response = await api.post('/loginWeb', { email, password });
 
-      await AsyncStorage.setItem('tokenTemp', response.data.token);
+      await AsyncStorage.setItem('userToken', response.data.token);
       navigation.navigate("Verificacao2FA", { email });
     } catch (error: any) {
       const status = error?.response?.status;

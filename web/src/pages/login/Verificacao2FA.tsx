@@ -4,6 +4,7 @@ import { useNavigation, NavigationProp, RouteProp, useRoute } from "@react-navig
 import { MaterialIcons } from '@expo/vector-icons';
 import { style } from "./style";
 import api from "../../services/api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface LoginProps {
   onLogin: () => void;
@@ -38,16 +39,10 @@ export default function Verificacao2FA({ onLogin }: LoginProps) {
       // usuário só recebe o token depois de ser autenticado
       // então, verifica se recebeu o token
       if (data.token) {
+        await AsyncStorage.setItem('token', data.token);
         Alert.alert("Sucesso", "Autenticação concluída!");
-        
-        setTimeout(() => {
-          if (data.token) {
-            onLogin();
-          } else {
-            Alert.alert('Erro', 'Usuário não foi encontrado');
-          }
-            setLoading(false);
-        }, 1500);
+
+        onLogin();
 
       } else {
         Alert.alert("Erro", "Token não recebido, tente novamente.");
