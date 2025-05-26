@@ -213,7 +213,7 @@ export default function CardProjeto({
           {verDepartamentos && (
             <View style={{ marginBottom: 12 }}>
               {projeto.departamentos.map(dep => (
-                <View key={dep._id} style={styles.cardItem}>
+                <View key={dep._id} style={styles.cardItem}>     
                   <Text style={styles.subtitle}>• {dep.nome}</Text>
                 </View>
               ))}
@@ -247,14 +247,14 @@ export default function CardProjeto({
             </View>
           )}
 
-          {/* Botão encerrar projeto */}
+          {/* Adicionar Funcionário */}
           {!encerrado && (
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}
+              style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, flexWrap: 'wrap', columnGap: 12, rowGap: 20,  }}
             >
               <TouchableOpacity
                 onPress={() => setShowAdd(!showAdd)}
-                style={{ padding: 10, backgroundColor: '#2a8bf2', borderRadius: 6 }}
+                style={{ padding: 10, backgroundColor: 'rgb(31, 72, 170)', borderRadius: 6 }}
               >
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>
                   Adicionar Funcionário
@@ -262,11 +262,11 @@ export default function CardProjeto({
               </TouchableOpacity>
               {showAdd && (
                 <View
-                  style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 12 }}
+                  style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8}}
                 >
                   <Picker
                     selectedValue={selectedFunc}
-                    style={{ height: 40, width: 180 }}
+                    style={{ height: 40, width: 180, borderRadius: 8 }}
                     onValueChange={value => setSelectedFunc(value)}
                   >
                     <Picker.Item label="Selecione" value="" />
@@ -288,7 +288,6 @@ export default function CardProjeto({
                   <TouchableOpacity
                     onPress={adicionarFuncionario}
                     style={{
-                      marginLeft: 8,
                       padding: 10,
                       backgroundColor: '#28a745',
                       borderRadius: 6,
@@ -304,11 +303,12 @@ export default function CardProjeto({
             </View>
           )}
 
+          {/* Encerrar Projeto */}
           {!encerrado && (
             <TouchableOpacity
               onPress={encerrarProjeto}
               style={{
-                marginTop: 30,
+                marginTop: 12,
                 paddingVertical: 10,
                 backgroundColor: '#555',
                 borderRadius: 6,
