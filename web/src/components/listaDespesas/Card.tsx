@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
   View,
   Text,
@@ -8,20 +9,20 @@ import {
   Linking,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import api from '../../services/api';
 import styles from './style';
 
-// Mapeamento de cores por categoria
-const categoriaCoresFundo: Record<string, string> = { 
+const categoriaCoresFundo: Record<string, string> = {
   'Alimentação': 'rgba(234, 234, 255, 0.8)',
   'Hospedagem': 'rgba(3, 46, 31, 0.07)',
   'Transporte': 'rgba(52, 163, 238, 0.1)',
   'Serviços Terceirizados': 'rgba(90, 128, 19, 0.1)',
   'Materiais': 'rgba(255, 109, 211, 0.06)',
   'Outros': 'rgba(97, 97, 97, 0.1)',
-};    
+};
 
-const categoriaCoresTexto: Record<string, string> = { 
+const categoriaCoresTexto: Record<string, string> = {
   'Alimentação': 'rgba(58, 8, 196, 0.63)',
   'Hospedagem': 'rgba(6, 58, 40, 0.65)',
   'Transporte': 'rgba(19, 75, 165, 0.67)',
@@ -31,78 +32,90 @@ const categoriaCoresTexto: Record<string, string> = {
 };
 
 const statusColors = {
-  aprovado:               { bg: '#d4f5e9',                     text: '#2e7d32' },
-  recusado:               { bg: '#ffe5e5',                     text: '#c62828' },
-  'aguardando aprovação': { bg: 'rgba(255, 188, 20, 0.21)',     text: 'rgba(214, 154, 1, 0.96)' },
+  customizado:              { bg: '#d8d8d8',                 text: '#2c2c2c' },
+  salvar:                   { bg: '#d9e8ff',                 text: '#113dff' },
+  aprovado:                 { bg: '#d4f5e9',                 text: '#2e7d32' },
+  recusado:                 { bg: '#ffe5e5',                 text: '#c62828' },
+  'aguardando aprovação':   { bg: 'rgba(255, 188, 20, 0.21)', text: 'rgba(214, 154, 1, 0.96)' },
+  'aprovado parcialmente':  { bg: '#fff3cd',                 text: '#856404' },
 } as const;
 
 type StatusKey = keyof typeof statusColors;
 
-interface Pacote {
-  _id: string;
-  pacoteId: number;
-  nome: string;
-  status: string;
-}
+type Approval = 'Aprovado' | 'Recusado' | 'Pendente';
 
-interface Despesa {
-  _id: string;
-  data: string;
-  valor_gasto: number;
-  descricao: string;
-  aprovacao: string;
-  categoria: string;
-  comprovante?: string;
-}
-
+interface Pacote { _id: string; pacoteId: number; nome: string; status: string; }
+interface Despesa { _id: string; data: string; valor_gasto: number; descricao: string; aprovacao: string; categoria: string; comprovante?: string; }
 interface Projeto { nome: string; }
-interface Categoria { nome: string; }
 interface Usuario { name: string; }
 
 interface CardProps {
   pacote: Pacote;
   despesas: Despesa[];
   projeto?: Projeto;
-  categoria?: Categoria;
   usuario?: Usuario;
   visivel: boolean;
-  comprovante: string;
   alternarVisibilidade: () => void;
   onAprovacaoChange: () => void;
 }
 
-const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
-  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>  
+const Label: React.FC<{ text: string; color: { bg: string; text: string }; customized?: boolean }> = ({ text, color, customized = false }) => (
+  <View style={[styles.labelContainer, { backgroundColor: color.bg, flexDirection: 'row', alignItems: 'center' }]}>  
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
+    {customized && <View style={styles.customBadge} />}
   </View>
 );
 
-export default function Card({
-  pacote,
-  despesas,
-  projeto,
-  usuario,
-  visivel,
-  alternarVisibilidade,
-  onAprovacaoChange,
-}: CardProps) {
+export default function Card({ pacote, despesas, projeto, usuario, visivel, alternarVisibilidade, onAprovacaoChange, }: CardProps) {
   const { width } = useWindowDimensions();
   const isWide = width >= 1220;
-  const [openDespesaId, setOpenDespesaId] = useState<string | null>(null);
 
-  // calcula o total de todas as despesas deste pacote
+  const [customMode, setCustomMode] = useState(false);
+  const [localApprovals, setLocalApprovals] = useState<Record<string, Approval>>({});
+
   const valorTotal = despesas.reduce((acc, d) => acc + d.valor_gasto, 0);
+  const allSelected = despesas.length > 0 && despesas.every(d => localApprovals[d._id] !== undefined);
 
-  const toggleDropdown = (id: string) =>
-    setOpenDespesaId(prev => (prev === id ? null : id));
+  const handleCustom = () => {
+    const initial: Record<string, Approval> = {};
+    despesas.forEach(d => {
+      if (d.aprovacao === 'Aprovado') initial[d._id] = 'Aprovado';
+      else if (d.aprovacao === 'Recusado') initial[d._id] = 'Recusado';
+      else initial[d._id] = 'Pendente';
+    });
+    setLocalApprovals(initial);
+    setCustomMode(true);
+  };
 
-  const updateAprovacao = async (id: string, aprov: string) => {
+  const deriveStatus = (): string => {
+    if (customMode && Object.keys(localApprovals).length === despesas.length) {
+      const vals = Object.values(localApprovals);
+      if (vals.every(v => v === 'Aprovado')) return 'Aprovado';
+      if (vals.every(v => v === 'Recusado')) return 'Recusado';
+      return 'Aprovado Parcialmente';
+    }
+    return pacote.status;
+  };
+
+  const displayStatus = deriveStatus();
+  const statusKey = displayStatus.trim().toLowerCase() as StatusKey;
+
+  const toggleApproval = (id: string, aprov: 'Aprovado' | 'Recusado') => {
+    setLocalApprovals(prev => ({ ...prev, [id]: aprov }));
+  };
+
+  const handleSaveAll = async () => {
     try {
-      await api.put(`/despesa/${id}`, { aprovacao: aprov });
-      setOpenDespesaId(null);
+      await Promise.all(
+        Object.entries(localApprovals).map(([id, aprov]) => api.put(`/despesa/${id}`, { aprovacao: aprov }))
+      );
+      await api.put(`/pacote/${pacote.pacoteId}/status`, { status: displayStatus });
+      setCustomMode(false);
+      setLocalApprovals({});
       onAprovacaoChange();
     } catch (err) {
-      console.error('Erro ao atualizar aprovação:', err);
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível salvar aprovações.');
     }
   };
 
@@ -119,82 +132,47 @@ export default function Card({
     }
   };
 
-  const rawStatus = pacote.status.trim().toLowerCase();
-  const statusKey: StatusKey =
-    rawStatus === 'aprovado'
-      ? 'aprovado'
-      : rawStatus === 'recusado'
-      ? 'recusado'
-      : 'aguardando aprovação';
-  const pacoteColor = statusColors[statusKey];
-
-  const statusTextColor =
-    rawStatus === 'aprovado'
-      ? statusColors.aprovado.text
-      : rawStatus === 'recusado'
-      ? statusColors.recusado.text
-      : statusColors['aguardando aprovação'].text;
-
   return (
-    <View
-      style={[
-        styles.wrapper,
-        { overflow: 'visible', zIndex: openDespesaId ? 1000 : 0, elevation: openDespesaId ? 20 : 0 },
-      ]}
-    >
-      <TouchableOpacity
-        style={styles.header}
-        onPress={alternarVisibilidade}
-        activeOpacity={0.7}
-      >
-        <View style={{ flexDirection: 'column', flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+    <View style={[styles.wrapper, { overflow: 'visible' }]}>       
+      <TouchableOpacity style={styles.header} onPress={alternarVisibilidade} activeOpacity={0.7}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.title}>{pacote.nome}</Text>
             <View style={styles.statusButtonsContainer}>
-              <TouchableOpacity
-                style={[styles.statusButton, { backgroundColor: statusColors.aprovado.bg }]}
-                onPress={() => updateStatusPacote('Aprovado')}
-              >
+              {!customMode ? (
+                <TouchableOpacity
+                  style={[styles.statusButton, { backgroundColor: statusColors.customizado.bg }]}
+                  onPress={handleCustom}
+                >
+                  <Text style={[styles.statusButtonText, { color: statusColors.customizado.text }]}>Customizar</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.statusButton, { backgroundColor: statusColors.salvar.bg }]}
+                  onPress={handleSaveAll}
+                  disabled={!allSelected}
+                >
+                  <Text style={[styles.statusButtonText, { color: statusColors.salvar.text }]}>Salvar</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={[styles.statusButton, { backgroundColor: statusColors.aprovado.bg }]} onPress={() => updateStatusPacote('Aprovado')}>
                 <Text style={[styles.statusButtonText, { color: statusColors.aprovado.text }]}>Aprovar</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.statusButton, { backgroundColor: statusColors.recusado.bg }]}
-                onPress={() => updateStatusPacote('Recusado')}
-              >
+              <TouchableOpacity style={[styles.statusButton, { backgroundColor: statusColors.recusado.bg }]} onPress={() => updateStatusPacote('Recusado')}>
                 <Text style={[styles.statusButtonText, { color: statusColors.recusado.text }]}>Rejeitar</Text>
               </TouchableOpacity>
-              <Ionicons
-                name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
-                size={24}
-                color="#444"
-              />
+              <Ionicons name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'} size={24} color="#444" />
             </View>
           </View>
-          {usuario?.name && (
-            <Text style={styles.subtitle}>
-              <Text style={{ fontWeight: 'bold' }}>Funcionário: </Text>
-              {usuario.name}
-            </Text>
-          )}
-          {projeto?.nome && (
-            <Text style={styles.subtitle}>
-              <Text style={{ fontWeight: 'bold' }}>Projeto: </Text>
-              {projeto.nome}
-            </Text>
-          )}
-          <Text style={styles.subtitle}>
-            <Text style={{ fontWeight: 'bold' }}>Valor Total: </Text>
-            <Text>R$ {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
-          </Text>
-          <Text style={styles.subtitle}>
-            <Text style={{ fontWeight: 'bold' }}>Status: </Text>
-            <Text style={{ color: statusTextColor }}>{pacote.status}</Text>
-          </Text>
+          {usuario?.name && <Text style={styles.subtitle}><Text style={{ fontWeight: 'bold' }}>Funcionário: </Text>{usuario.name}</Text>}
+          {projeto?.nome && <Text style={styles.subtitle}><Text style={{ fontWeight: 'bold' }}>Projeto: </Text>{projeto.nome}</Text>}
+          <Text style={styles.subtitle}><Text style={{ fontWeight: 'bold' }}>Valor Total: </Text>R$ {valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+          <Text style={styles.subtitle}><Text style={{ fontWeight: 'bold' }}>Status: </Text><Text style={{ color: statusColors[statusKey].text }}>{displayStatus}</Text></Text>
         </View>
       </TouchableOpacity>
 
       {visivel && (
-        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>  
+        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>   
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
@@ -205,76 +183,43 @@ export default function Card({
               <Text style={[styles.cell, styles.aprovacao]}>APROVAÇÃO</Text>
             </View>
           )}
-
           {despesas.map(d => {
-            const label =
-              d.aprovacao === 'Aprovado'
-                ? 'Aprovado'
-                : d.aprovacao === 'Recusado'
-                ? 'Recusado'
-                : 'Pendente';
-            const key: StatusKey =
-              label === 'Aprovado'
-                ? 'aprovado'
-                : label === 'Recusado'
-                ? 'recusado'
-                : 'aguardando aprovação';
-            const aprovColor = statusColors[key];
-
-            // Cores dinâmicas por categoria
+            const local = localApprovals[d._id] || d.aprovacao;
+            const labelText = local;
+            const labelKey = labelText.trim().toLowerCase() as StatusKey;
+            const aprovColor = statusColors[labelKey] || { bg: 'rgba(255, 188, 20, 0.21)', text: 'rgba(214, 154, 1, 0.96)' };
             const bgCategoria = categoriaCoresFundo[d.categoria] || 'rgba(229, 231, 255, 1)';
             const textCategoria = categoriaCoresTexto[d.categoria] || 'rgba(76, 77, 220, 1)';
+            const approvedSelected = localApprovals[d._id] === 'Aprovado';
+            const rejectedSelected = localApprovals[d._id] === 'Recusado';
 
             return (
               <View key={d._id} style={isWide ? styles.tableRow : styles.cardItem}>
                 <View style={[styles.cell, styles.categoria]}>
                   <Label text={d.categoria} color={{ bg: bgCategoria, text: textCategoria }} />
                 </View>
-                <Text style={[styles.cell, styles.data]}>
-                  {new Date(d.data).toLocaleDateString('pt-BR', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                  })}
-                </Text>
+                <Text style={[styles.cell, styles.data]}>{new Date(d.data).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
                 <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
                 <Text style={[styles.cell, styles.descricao]}>{d.descricao}</Text>
-                <View style={[styles.cell, styles.descricao]}>
-                <TouchableOpacity
-                  style={styles.comprovanteButton}
-                  onPress={() => { if (d.comprovante) Linking.openURL(d.comprovante); }}>
-                  <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
-                </TouchableOpacity>
-              </View>
+                <View style={[styles.cell, styles.comprovante]}>
+                  <TouchableOpacity style={styles.comprovanteButton} onPress={() => d.comprovante && Linking.openURL(d.comprovante)}>
+                    <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
+                  </TouchableOpacity>
+                </View>
                 <View style={[styles.cell, styles.aprovacao]}>
-                  <View style={{ position: 'relative' }}>
-                    <TouchableOpacity
-                      style={styles.aprovacaoToggle}
-                      onPress={() => toggleDropdown(d._id)}
-                      activeOpacity={0.7}
-                    >
-                      <Label text={label} color={aprovColor} />
-                      <Ionicons
-                        name="chevron-down-outline"
-                        size={16}
-                        style={{ marginLeft: 4 }}
-                      />
-                    </TouchableOpacity>
-                    {openDespesaId === d._id && (
-                      <View style={[styles.selectContainer, { position: 'absolute', top: 30, right: 0, zIndex: 1001, elevation: 25 }]}>  
-
-                        {['Aprovado', 'Recusado'].map(opt => (
-                          <TouchableOpacity
-                            key={opt}
-                            style={styles.selectItem}
-                            onPress={() => updateAprovacao(d._id, opt)}
-                          >
-                            <Text style={[styles.selectItemText, { color: statusColors[opt.toLowerCase() as StatusKey].text }]}>
-                              {opt}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
+                  {customMode ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Label text={labelText} color={aprovColor} customized={!!localApprovals[d._id]} />
+                      <TouchableOpacity style={styles.aprovacaoToggle} onPress={() => toggleApproval(d._id, 'Aprovado')}>
+                        <AntDesign name="checkcircleo" size={18} color={approvedSelected ? statusColors.aprovado.text : '#474747'} />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.aprovacaoToggle} onPress={() => toggleApproval(d._id, 'Recusado')}>
+                        <AntDesign name="closecircleo" size={18} color={rejectedSelected ? statusColors.recusado.text : '#474747'} />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <Label text={labelText} color={aprovColor} />
+                  )}
                 </View>
               </View>
             );

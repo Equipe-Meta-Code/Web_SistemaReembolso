@@ -37,11 +37,16 @@ export default StyleSheet.create({
   },
   cardItem: {
     marginBottom: 16,
-    padding: 8,
+    padding: 10,
+    paddingBottom: 20,
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 10,
     backgroundColor: '#fdfdfd',
+    gap: 10,
+    alignItems: 'flex-start',
+    textAlign: 'left',
+    height: 'auto',
   },
   cell: {
     flex: 1,
@@ -62,7 +67,7 @@ export default StyleSheet.create({
   data: { flex: 2 },
   valor: { flex: 1.5 },
   usuario: { flex: 2 },
-  descricao: { flex: 3 },
+  descricao: { flex: 2 },
   comprovante: { flex: 2 },
   aprovacao: { flex: 1.5 },
   aprovacaoToggle: {
@@ -124,5 +129,17 @@ export default StyleSheet.create({
     fontWeight: '500',
     fontSize: 13,
   },
-  
+  aprovar: {
+    display: 'flex',
+    flexDirection: 'row',
+    
+  },
+  customBadge: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFC107',
+    marginLeft: 4,
+  },
+
 });
