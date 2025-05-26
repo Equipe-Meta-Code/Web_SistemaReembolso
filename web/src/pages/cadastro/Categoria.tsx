@@ -108,7 +108,7 @@ export default function Categorias({ setTitulo, setShowSearch }: CategoriasProps
                 <Card.Content>
                     {/* Formulário de cadastro */}
                     <View style={styles.row_top}>
-                        <View style={{ width: 600, backgroundColor: '#FFFFFF', borderRadius: 8 }}>
+                        <View style={{ maxWidth: 600, minWidth: 200, width: '100%', backgroundColor: '#FFFFFF', borderRadius: 8 }}>
                             <TextInput
                                 label="Nome da Categoria"
                                 value={name}
@@ -204,14 +204,18 @@ const styles = StyleSheet.create({
     },
     row_top: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         alignItems: 'center',
         marginTop: 4,
-        gap: 120,
+        columnGap: 120,
+        rowGap: 20,
         marginBottom: 60,
     },
     button: {
+        maxWidth: 600, 
+        minWidth: 200, 
+        width: '100%',
         borderRadius: 24,
-        width: 350,
         backgroundColor: '#1F48AA',
     },
     label: {
@@ -225,8 +229,10 @@ const styles = StyleSheet.create({
     },
     row_bottom: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         alignItems: 'center',
-        gap: 120,
+        columnGap: 120,
+        rowGap: 20,
         marginBottom: 30,
     },
     tableContainer: {
@@ -234,7 +240,9 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#E9ECEF',
-        width: 600,
+        maxWidth: 600, 
+        minWidth: 200, 
+        width: '100%'
     },
     header: {
         backgroundColor: '#FFFFFF',
