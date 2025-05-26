@@ -26,4 +26,5 @@ export interface Projeto {
   departamentos: Departamento[];
   funcionarios: Funcionario[];
   createdAt: string;
+  status: 'ativo' | 'encerrado';
 }
