@@ -12,13 +12,13 @@ import api from '../../services/api';
 
 interface Categoria {
   _id: string;
-  categoriaId: string;
+  categoriaId: number; // ajuste conforme modelo
   nome: string;
 }
 
 interface Departamento {
   _id: string;
-  departamentoId: string;
+  departamentoId: number;
   nome: string;
 }
 
@@ -27,14 +27,18 @@ interface Funcionario {
   userId: number;
   name: string;
 }
+interface ProjetosProps {
+    setTitulo: (titulo: string) => void;
+    setShowSearch: (show: boolean) => void;
+}
 
-export default function CadastroProjetos() {
+export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     const [nomeProjeto, setNomeProjeto] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [departamentoId, setDepartamentoId] = useState('');
+    const [departamentosInput, setDepartamentosInput] = useState<string[]>(['']);
     const [categoriasInput, setCategoriasInput] = useState<{ categoriaId: string; valorMaximo: string }[]>([{ categoriaId: '', valorMaximo: '' }]);
     const [funcionariosInput, setFuncionariosInput] = useState<string[]>(['']);
-    const [expandedDepartamento, setExpandedDepartamento] = useState(false);
+    const [expandedDepartamentos, setExpandedDepartamentos] = useState<number | null>(null);
     const [expandedCategorias, setExpandedCategorias] = useState<number | null>(null);
     const [expandedFuncionarios, setExpandedFuncionarios] = useState<number | null>(null);
 
@@ -45,15 +49,24 @@ export default function CadastroProjetos() {
     const scale = useState(new Animated.Value(1))[0];
 
     useEffect(() => {
+        setTitulo('Cadastro de Projetos');
+        setShowSearch(false);
         const fetchData = async () => {
             try {
                 const [catRes, depRes, funcRes] = await Promise.all([
-                    api.get<Categoria[]>('/categorias'),
-                    api.get<Departamento[]>('/departamentos'),
-                    api.get<{ users: Funcionario[] }>('/userList'),
+                    api.get('/categorias'),
+                    api.get('/departamentos'),
+                    api.get('/userList'),
                 ]);
-                setListaCategorias(catRes.data);
-                setListaDepartamentos(depRes.data);
+                // extrai corretamente arrays quando payload é { message, alertType, categorias/departamentos }
+                const rawCats = Array.isArray(catRes.data)
+                    ? catRes.data
+                    : catRes.data.categorias;
+                const rawDeps = Array.isArray(depRes.data)
+                    ? depRes.data
+                    : depRes.data.departamentos;
+                setListaCategorias(rawCats);
+                setListaDepartamentos(rawDeps);
                 setListaFuncionarios(funcRes.data.users);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -67,6 +80,15 @@ export default function CadastroProjetos() {
         (total, item) => total + (parseFloat(item.valorMaximo) || 0),
         0
     );
+
+    const adicionarDepartamento = () =>
+        setDepartamentosInput([...departamentosInput, '']);
+
+    const atualizarDepartamento = (index: number, valor: string) => {
+        const arr = [...departamentosInput];
+        arr[index] = valor;
+        setDepartamentosInput(arr);
+    };
 
     const adicionarCategoria = () =>
         setCategoriasInput([...categoriasInput, { categoriaId: '', valorMaximo: '' }]);
@@ -110,7 +132,7 @@ export default function CadastroProjetos() {
         if (
             !nomeProjeto ||
             !descricao ||
-            !departamentoId ||
+            departamentosInput.some((d) => !d) ||
             categoriasInput.some((c) => !c.categoriaId || !c.valorMaximo) ||
             funcionariosInput.some((f) => !f)
         ) {
@@ -119,21 +141,22 @@ export default function CadastroProjetos() {
         }
 
         const categorias = categoriasInput.map((c) => {
-            const cat = listaCategorias.find((x) => x.categoriaId === c.categoriaId);
+            const cat = listaCategorias.find((x) => String(x.categoriaId) === c.categoriaId);
             return {
                 categoriaId: c.categoriaId,
                 nome: cat?.nome || 'Desconhecida',
                 valor_maximo: parseFloat(c.valorMaximo),
             };
         });
-        const departamentos = [
-            {
-                departamentoId,
-                nome:
-                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
-                        ?.nome ?? 'Desconhecido',
-            },
-        ];
+
+        const departamentos = departamentosInput.map((depId) => {
+            const d = listaDepartamentos.find((x) => String(x.departamentoId) === depId);
+            return {
+                departamentoId: depId,
+                nome: d?.nome ?? 'Desconhecido',
+            };
+        });
+
         const funcionarios = funcionariosInput.map((idStr) => {
             const userId = Number(idStr);
             const f = listaFuncionarios.find((x) => x.userId === userId);
@@ -154,7 +177,7 @@ export default function CadastroProjetos() {
             Alert.alert('Sucesso', 'Projeto cadastrado com sucesso!');
             setNomeProjeto('');
             setDescricao('');
-            setDepartamentoId('');
+            setDepartamentosInput(['']);
             setCategoriasInput([{ categoriaId: '', valorMaximo: '' }]);
             setFuncionariosInput(['']);
         } catch (error) {
@@ -187,27 +210,41 @@ export default function CadastroProjetos() {
                                 mode="flat"
                             />
 
-                            <Title style={styles.selectTitle}>Departamento</Title>
-                            <List.Accordion
-                                title={
-                                    listaDepartamentos.find((d) => d.departamentoId === departamentoId)
-                                        ?.nome || 'Escolha o Departamento'
-                                }
-                                style={styles.field}
-                                expanded={expandedDepartamento}
-                                onPress={() => setExpandedDepartamento(!expandedDepartamento)}
-                            >
-                                {listaDepartamentos.map((d) => (
-                                    <List.Item
-                                        key={d._id}
-                                        title={d.nome}
-                                        onPress={() => {
-                                            setDepartamentoId(d.departamentoId);
-                                            setExpandedDepartamento(false);
-                                        }}
-                                    />
-                                ))}
-                            </List.Accordion>
+                            <Title style={styles.selectTitle}>Departamentos</Title>
+                            {departamentosInput.map((item, idx) => (
+                                <List.Accordion
+                                    key={idx}
+                                    title={
+                                        listaDepartamentos.find((d) => String(d.departamentoId) === item)
+                                            ?.nome || 'Escolha o Departamento'
+                                    }
+                                    style={styles.field}
+                                    expanded={expandedDepartamentos === idx}
+                                    onPress={() =>
+                                        setExpandedDepartamentos(
+                                            expandedDepartamentos === idx ? null : idx
+                                        )
+                                    }
+                                >
+                                    {listaDepartamentos.map((d) => (
+                                        <List.Item
+                                            key={d._id}
+                                            title={d.nome}
+                                            onPress={() => {
+                                                atualizarDepartamento(idx, String(d.departamentoId));
+                                                setExpandedDepartamentos(null);
+                                            }}
+                                        />
+                                    ))}
+                                </List.Accordion>
+                            ))}
+                            <IconButton
+                                icon="plus"
+                                size={20}
+                                onPress={adicionarDepartamento}
+                                style={[styles.addButton, { backgroundColor: '#ff8522' }]}
+                                iconColor="white"
+                            />
 
                             <Title style={styles.selectTitle}>Categorias e Valor Máximo (R$)</Title>
                             {categoriasInput.map((item, idx) => (
@@ -215,7 +252,7 @@ export default function CadastroProjetos() {
                                     <View style={{ flex: 1 }}>
                                         <List.Accordion
                                             title={
-                                                listaCategorias.find((c) => c.categoriaId === item.categoriaId)
+                                                listaCategorias.find((c) => String(c.categoriaId) === item.categoriaId)
                                                     ?.nome || 'Escolha a Categoria'
                                             }
                                             style={styles.field}
@@ -234,7 +271,7 @@ export default function CadastroProjetos() {
                                                         atualizarCategoria(
                                                             idx,
                                                             'categoriaId',
-                                                            c.categoriaId
+                                                            String(c.categoriaId)
                                                         );
                                                         setExpandedCategorias(null);
                                                     }}
@@ -305,7 +342,7 @@ export default function CadastroProjetos() {
 
                             <Card style={styles.totalCard}>
                                 <Card.Content>
-                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>                                
+                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>
                                 </Card.Content>
                             </Card>
 
@@ -328,19 +365,10 @@ export default function CadastroProjetos() {
     );
 }
 
-const coresCategoria = ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#f44336'];
-
 const styles = StyleSheet.create({
     container: {
         padding: 16,
         backgroundColor: '#ffffff',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1976d2',
-        marginBottom: 16,
-        textAlign: 'center',
     },
     card: {
         padding: 8,
@@ -355,23 +383,23 @@ const styles = StyleSheet.create({
     rightSide: {
         marginTop: 24,
     },
-    field: { // novo estilo unificado
+    field: {
         backgroundColor: '#ffffff',
         borderColor: '#cccccc',
         borderWidth: 1,
-        borderRadius: 8, // bordas levemente arredondadas
-        height: 45, // altura padrão para inputs e selects
-        justifyContent: 'center', // para alinhar o texto verticalmente no select
+        borderRadius: 8,
+        height: 45,
+        justifyContent: 'center',
         paddingHorizontal: 12,
         marginBottom: 12,
     },
-    input: { // novo estilo unificado
-        backgroundColor: '',
+    input: {
+        backgroundColor: '#ffffff',
         borderColor: '#cccccc',
         borderWidth: 1,
-        borderRadius: 8, // bordas levemente arredondadas
-        height: 45, // altura padrão para inputs e selects
-        justifyContent: 'center', // para alinhar o texto verticalmente no select
+        borderRadius: 8,
+        height: 45,
+        justifyContent: 'center',
         paddingHorizontal: 12,
         marginBottom: 12,
     },
@@ -398,28 +426,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
     },
-    valorItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    bolinha: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        marginRight: 8,
-    },
-    valorTexto: {
-        fontSize: 16,
-    },
-    barContainer: {
-        flexDirection: 'row',
-        marginTop: 8,
-        backgroundColor: '#e0e0e0',
-        height: 20,
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
     cadastrarButton: {
         backgroundColor: '#1F48AA',
         paddingVertical: 8,
@@ -433,4 +439,3 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
-

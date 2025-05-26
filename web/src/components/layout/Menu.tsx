@@ -6,6 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../routes/navigation.d";
 import BotaoMenu from "./BotaoMenu";
+import { Alert } from "react-native";
+import { Platform } from "react-native";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -14,12 +16,32 @@ const MENU_ITEMS: { name: keyof RootStackParamList; icon: string; label: string 
   { name: "Funcionarios", icon: "person-outline",     label: "Funcionarios" },
   { name: "Categorias",  icon: "bag-handle-outline", label: "Categorias" },
   { name: "Projetos",    icon: "analytics-outline",  label: "Projetos" },
-  { name: "Departamentos", icon: "exit-outline",     label: "Departamentos" },
+  { name: "Departamentos", icon: "git-network-outline",     label: "Departamentos" },
 ];
 
-export default function Menu() {
+interface MenuProps {
+  onLogout: () => void;
+}
+
+export default function Menu({ onLogout }: MenuProps) {
   const navigation = useNavigation<NavProp>();
   const [collapsed, setCollapsed] = useState(false);
+
+  const confirmarLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm("Deseja mesmo sair da sua conta?");
+      if (confirmed) onLogout();
+    } else {
+      Alert.alert(
+        "Confirmação",
+        "Deseja mesmo sair da sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sair", onPress: onLogout }
+        ]
+      );
+    }
+  };
 
   return (
     <View style={[style.menu, collapsed ? { width: 60 } : { width: 240 }]}>
@@ -54,6 +76,11 @@ export default function Menu() {
                 onPress={() => navigation.navigate(item.name)}
               />
             ))}
+              <BotaoMenu
+                nomeBotao="Logout"
+                iconName= "exit-outline"
+                onPress={confirmarLogout}
+              />
           </View>
         </>
       )}
@@ -81,6 +108,17 @@ export default function Menu() {
               />
             </TouchableOpacity>
           ))}
+
+            <TouchableOpacity 
+              style={style.botaoIcone}
+              onPress={confirmarLogout}
+            >
+              <Ionicons 
+                name="log-out-outline" 
+                size={24} 
+                color="#151D48" 
+              />
+            </TouchableOpacity>
         </View>
       )}
     </View>
