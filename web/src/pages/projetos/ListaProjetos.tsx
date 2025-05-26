@@ -1,4 +1,3 @@
-// src/pages/listaDespesas/ListaProjetos.tsx
 import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
@@ -6,7 +5,11 @@ import {
   Text,
   RefreshControl,
   TouchableOpacity,
+  Pressable,
+  TextInput,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/api';
 import styles from './style';
 import CardProjeto from '../../components/listaProjetos/CardProjeto';
@@ -19,22 +22,48 @@ interface ListaProjetosProps {
   setShowSearch: (show: boolean) => void;
 }
 
+export interface Usuario {
+  _id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: number;
+  __v: number;
+  twoFactorEnabled: boolean;
+}
+
 const ListaProjetos: React.FC<ListaProjetosProps> = ({
   filtro,
   setTitulo,
   setShowSearch,
 }) => {
   const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [quantidadeProjetos, setQuantidadeProjetos] = useState(5);
   const [visivelProjeto, setVisivelProjeto] = useState<Record<number, boolean>>({});
+
+  const [nomeFiltro, setNomeFiltro] = useState<string>('');
+  const [funcionariosDropdowns, setFuncionariosDropdowns] = useState<number[]>([0]);
+  const [funcionariosSelecionados, setFuncionariosSelecionados] = useState<number[]>([]);
 
   const navigation = useNavigation();
 
   useEffect(() => {
     setTitulo('Lista de Projetos');
-    setShowSearch(true);
+    setShowSearch(false);
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get<{ users: Usuario[] }>('/userList');
+      setUsuarios(res.data.users ?? []);
+    } catch (err) {
+      console.error('Erro ao buscar usuários:', err);
+    }
+  };
 
   const fetchProjetos = async () => {
     try {
@@ -51,9 +80,34 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const projetosFiltrados = projetos.filter(p =>
-    p.nome.toLowerCase().includes(filtro.toLowerCase())
-  );
+  const addFuncionarioDropdown = () =>
+    setFuncionariosDropdowns(prev => [...prev, prev.length]);
+  const removeFuncionarioDropdown = (idx: number) => {
+    setFuncionariosDropdowns(prev =>
+      prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev
+    );
+    setFuncionariosSelecionados(prev => prev.filter((_, i) => i !== idx));
+  };
+  const setFuncionarioSelecionado = (idx: number, userId: string | number) => {
+    setFuncionariosSelecionados(prev => {
+      const novo = [...prev];
+      novo[idx] = userId === '' ? NaN : Number(userId);
+      return novo as number[];
+    });
+  };
+
+  // Filtra por nome (search input + prop filtro) e por funcionários
+  const projetosFiltrados = projetos.filter(p => {
+    const nomePropOk = p.nome.toLowerCase().includes(filtro.toLowerCase());
+    const nomeLocalOk = p.nome.toLowerCase().includes(nomeFiltro.toLowerCase());
+    const funcionariosValidos = funcionariosSelecionados.filter(
+      f => typeof f === 'number' && !isNaN(f)
+    );
+    const atendeFuncionario =
+      funcionariosValidos.length === 0 ||
+      p.funcionarios.some(f => funcionariosValidos.includes(f.userId));
+    return nomePropOk && nomeLocalOk && atendeFuncionario;
+  });
 
   const projetosVisiveis = projetosFiltrados.slice(0, quantidadeProjetos);
 
@@ -65,15 +119,16 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
           refreshing={refreshing}
           onRefresh={async () => {
             setRefreshing(true);
-            await fetchProjetos();
+            await Promise.all([fetchProjetos(), fetchUsers()]);
             setRefreshing(false);
           }}
         />
       }
     >
       <View style={{ padding: 16 }}>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <View
+          style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}
+        >
           <TouchableOpacity
             style={{
               backgroundColor: '#007bff',
@@ -87,6 +142,47 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
               + Novo Projeto
             </Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.filtroTexto}>Nome do Projeto:</Text>
+          <TextInput
+            value={nomeFiltro}
+            onChangeText={setNomeFiltro}
+            placeholder="Buscar projeto..."
+            placeholderTextColor="#aaa"
+            style={styles.inputFiltro}
+          />
+        </View>
+
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.filtroTexto}>Funcionários:</Text>
+          {funcionariosDropdowns.map((_, idx) => (
+            <View
+              key={idx}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+            >
+              <Picker
+                selectedValue={funcionariosSelecionados[idx] ?? ''}
+                style={styles.selecaoFiltro}
+                onValueChange={value => setFuncionarioSelecionado(idx, value)}
+              >
+                <Picker.Item label="Selecione" value="" />
+                {usuarios.map(u => (
+                  <Picker.Item key={u.userId} label={u.name} value={u.userId} />
+                ))}
+              </Picker>
+              <Pressable
+                onPress={() => removeFuncionarioDropdown(idx)}
+                style={{ marginLeft: 8 }}
+              >
+                <Ionicons name="remove-circle-outline" size={24} color="red" />
+              </Pressable>
+            </View>
+          ))}
+          <Pressable onPress={addFuncionarioDropdown}>
+            <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Funcionário</Text>
+          </Pressable>
         </View>
 
         {/* Lista de Projetos */}
