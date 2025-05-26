@@ -57,6 +57,13 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
 
   const projetosVisiveis = projetosFiltrados.slice(0, quantidadeProjetos);
 
+  const ativos = projetosFiltrados.filter(p => p.status === 'ativo');
+  const encerrados = projetosFiltrados.filter(p => p.status === 'encerrado');
+
+  const atualizarProjetos = () => {
+    fetchProjetos();
+  };
+
   return (
     <ScrollView
       style={styles.pagina}
@@ -89,8 +96,8 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Lista de Projetos */}
-        {projetosVisiveis.map(p => (
+        {/* Lista de Projetos Ativos */}
+        {ativos.slice(0, quantidadeProjetos).map(p => (
           <CardProjeto
             key={p.projetoId}
             projeto={p}
@@ -101,8 +108,48 @@ const ListaProjetos: React.FC<ListaProjetosProps> = ({
                 [p.projetoId!]: !prev[p.projetoId!],
               }))
             }
+            onProjetoAtualizado={atualizarProjetos}
           />
         ))}
+
+        {quantidadeProjetos < ativos.length && (
+          <Text
+            style={{
+              marginTop: 20,
+              textAlign: 'center',
+              color: '#007bff',
+              fontWeight: 'bold',
+            }}
+            onPress={() => setQuantidadeProjetos(quantidadeProjetos + 5)}
+          >
+            Ver mais projetos
+          </Text>
+        )}
+
+        {/* Lista de Projetos Encerrados */}
+        {encerrados.length > 0 && (
+          <View style={{ marginTop: 32 }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#888', marginBottom: 8 }}>
+              Projetos Encerrados
+            </Text>
+            {encerrados.map(p => (
+              <CardProjeto
+                key={p.projetoId}
+                projeto={p}
+                visivel={!!visivelProjeto[p.projetoId!]}
+                alternarVisibilidade={() =>
+                  setVisivelProjeto(prev => ({
+                    ...prev,
+                    [p.projetoId!]: !prev[p.projetoId!],
+                  }))
+                }
+                encerrado 
+                onProjetoAtualizado={atualizarProjetos}
+              />
+            ))}
+          </View>
+        )}
+
 
         {quantidadeProjetos < projetosFiltrados.length && (
           <Text
