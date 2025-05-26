@@ -77,7 +77,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
     }, []);
 
     const valorTotal = categoriasInput.reduce(
-        (total, item) => total + (parseFloat(item.valorMaximo) || 0),
+        (total, item) => total + (Number(item.valorMaximo.replace(/\D/g, '')) / 100 || 0),
         0
     );
 
@@ -145,7 +145,7 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
             return {
                 categoriaId: c.categoriaId,
                 nome: cat?.nome || 'Desconhecida',
-                valor_maximo: parseFloat(c.valorMaximo),
+                valor_maximo: Number(c.valorMaximo) / 100, 
             };
         });
 
@@ -281,10 +281,18 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
                                     </View>
                                     <TextInput
                                         label="Valor"
-                                        value={item.valorMaximo}
-                                        onChangeText={(t) =>
-                                            atualizarCategoria(idx, 'valorMaximo', t)
+                                        value={
+                                            item.valorMaximo
+                                                ? `R$ ${(Number(item.valorMaximo.replace(/\D/g, '')) / 100).toLocaleString('pt-BR', {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                  })}`
+                                                : ''
                                         }
+                                        onChangeText={(t) => {
+                                            const onlyNums = t.replace(/\D/g, '');
+                                            atualizarCategoria(idx, 'valorMaximo', onlyNums);
+                                        }}
                                         style={[styles.input, { width: 100, marginLeft: 8 }]}
                                         mode="flat"
                                         keyboardType="numeric"
@@ -342,7 +350,15 @@ export default function Projetos({ setTitulo, setShowSearch }: ProjetosProps) {
 
                             <Card style={styles.totalCard}>
                                 <Card.Content>
-                                    <Title>Valor Limite Total: R$ {valorTotal.toFixed(2)}</Title>
+                                    <Title>
+                                        Valor Limite Total:{" "}
+                                        {valorTotal
+                                            ? `R$ ${valorTotal.toLocaleString('pt-BR', {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                              })}`
+                                            : "R$ 0,00"}
+                                    </Title>
                                 </Card.Content>
                             </Card>
 
