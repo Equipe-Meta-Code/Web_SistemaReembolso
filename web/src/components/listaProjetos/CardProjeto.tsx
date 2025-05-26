@@ -8,6 +8,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import styles from './style';
 import { Projeto } from '../../types/Projeto';
+import api from '../../services/api';
 
 const categoriaCoresFundo: Record<string, string> = { 
   'Alimentação': 'rgba(234, 234, 255, 0.8)',
@@ -31,6 +32,8 @@ interface CardProps {
   projeto: Projeto;
   visivel: boolean;
   alternarVisibilidade: () => void;
+  encerrado?: boolean;
+  onProjetoAtualizado: () => void; 
 }
 
 const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
@@ -43,15 +46,40 @@ export default function CardProjeto({
   projeto,
   visivel,
   alternarVisibilidade,
+  encerrado,
+  onProjetoAtualizado,
 }: CardProps) {
   const { width } = useWindowDimensions();
   const isWide = width >= 1220;
 
   const [verDepartamentos, setVerDepartamentos] = useState(false);
   const [verFuncionarios, setVerFuncionarios] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const encerrarProjeto = async () => {
+    const confirmar = window.confirm(`Deseja realmente encerrar o projeto "${projeto.nome}"?`);
+    if (!confirmar) return;
+
+    try {
+  setLoading(true);
+  const response = await api.put(`/projeto/${projeto.projetoId}/encerrar`);
+  setLoading(false);
+  if (response.status >= 200 && response.status < 300) {
+    window.alert('Projeto encerrado com sucesso!');
+    onProjetoAtualizado();
+  } else {
+    window.alert('Falha ao encerrar o projeto.');
+  }
+} catch (error) {
+  setLoading(false);
+  window.alert('Falha ao encerrar o projeto.');
+  console.error(error);
+}
+
+  };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, encerrado && { opacity: 0.5 }]}>
       <TouchableOpacity
         style={styles.header}
         onPress={alternarVisibilidade}
@@ -130,7 +158,7 @@ export default function CardProjeto({
             <Ionicons
               name={verFuncionarios ? 'chevron-up-outline' : 'chevron-down-outline'}
               size={20}
-              color="#555"
+              color="gray"
               style={{ marginLeft: 4 }}
             />
           </TouchableOpacity>
@@ -142,6 +170,25 @@ export default function CardProjeto({
                 </View>
               ))}
             </View>
+          )}
+
+          {/* Botão encerrar projeto */}
+          {!encerrado && (
+            <TouchableOpacity
+              onPress={encerrarProjeto}
+              style={{
+                marginTop: 30,
+                paddingVertical: 10,
+                backgroundColor: '#555',
+                borderRadius: 6,
+                alignItems: 'center',
+              }}
+              disabled={loading}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                {loading ? 'Encerrando...' : 'Encerrar Projeto'}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       )}
