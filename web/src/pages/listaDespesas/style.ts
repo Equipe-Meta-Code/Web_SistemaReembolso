@@ -51,4 +51,14 @@ export default StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
+  selecaoFiltro: {
+    width: 180,
+    padding: 10,
+    borderRadius: 20,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  botaoAdicionarFiltro: {
+    color: '#1F48AA',
+  },
 });

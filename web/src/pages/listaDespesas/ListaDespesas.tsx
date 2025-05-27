@@ -1,4 +1,3 @@
-// src/pages/listaDespesas/ListaDespesas.tsx
 import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
@@ -11,6 +10,7 @@ import Card from '../../components/listaDespesas/Card';
 import api from '../../services/api';
 import styles from './style';
 import { Picker } from '@react-native-picker/picker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface Pacote {
   _id: string;
@@ -45,8 +45,31 @@ interface ListaDespesasProps {
   setShowSearch: (show: boolean) => void;
 }
 
-const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado'] as const;
+const SECOES = ['Aguardando Aprovação', 'Recusado', 'Aprovado', 'Aprovado Parcialmente'] as const;
 type Secao = typeof SECOES[number];
+
+const statusStyles: Record<Secao, { backgroundColor: string; color: string }> = {
+  'Aguardando Aprovação': {
+    backgroundColor: 'rgba(255, 188, 20, 0.21)',
+    color: 'rgba(214, 154, 1, 0.96)',
+  },
+  Recusado: {
+    backgroundColor: 'rgba(209, 53, 53, 0.15)',
+    color: 'rgba(185, 14, 14, 0.70)',
+  },
+  Aprovado: {
+    backgroundColor: 'rgba(27, 143, 37, 0.15)',
+    color: 'rgba(4, 155, 12, 0.83)',
+  },
+  'Aprovado Parcialmente': {
+    backgroundColor: 'rgba(255, 139, 62, 0.21)',
+    color: 'rgba(248, 103, 7, 0.69)',
+  },
+};
+
+// Cores de seleção
+const selectedBg = 'rgba(173, 216, 230, 0.4)';
+const selectedColor = 'rgba(0, 0, 139, 1)';
 
 const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setShowSearch }) => {
   const [pacotes, setPacotes] = useState<Pacote[]>([]);
@@ -131,35 +154,44 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
     );
 
   const pacotesFiltrados = pacotes.filter(p => {
+    const funcionariosValidos = funcionariosSelecionados.filter(f => typeof f === 'number' && !isNaN(f));
+    const projetosValidos = projetosSelecionados.filter(pj => typeof pj === 'number' && !isNaN(pj));
+
+    const okUser =
+      funcionariosValidos.length === 0 ? true : funcionariosValidos.includes(p.userId);
+    const okProjeto =
+      projetosValidos.length === 0 ? true : projetosValidos.includes(p.projetoId);
+
     const okStatus = !statusSelecionados.length || statusSelecionados.includes(p.status);
-    const okUser = !funcionariosSelecionados.length || funcionariosSelecionados.includes(p.userId);
-    const okProjeto = !projetosSelecionados.length || projetosSelecionados.includes(p.projetoId);
+
     return okStatus && okUser && okProjeto;
   });
 
-  // Funções para adicionar/remover dropdowns
   const addFuncionarioDropdown = () => setFuncionariosDropdowns(prev => [...prev, prev.length]);
-  const removeFuncionarioDropdown = (idx: number) =>
-    setFuncionariosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
-
   const addProjetoDropdown = () => setProjetosDropdowns(prev => [...prev, prev.length]);
-  const removeProjetoDropdown = (idx: number) =>
-    setProjetosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
 
-  // Atualiza seleção de funcionário/projeto por dropdown
-  const setFuncionarioSelecionado = (idx: number, userId: number) => {
+  const setFuncionarioSelecionado = (idx: number, userId: number | string) => {
     setFuncionariosSelecionados(prev => {
       const novo = [...prev];
-      novo[idx] = userId;
-      return novo;
+      novo[idx] = userId === "" ? NaN : Number(userId);
+      return novo as number[];
     });
   };
-  const setProjetoSelecionado = (idx: number, projetoId: number) => {
+  const setProjetoSelecionado = (idx: number, projetoId: number | string) => {
     setProjetosSelecionados(prev => {
       const novo = [...prev];
-      novo[idx] = projetoId;
-      return novo;
+      novo[idx] = projetoId === "" ? NaN : Number(projetoId);
+      return novo as number[];
     });
+  };
+
+  const removeFuncionarioDropdown = (idx: number) => {
+    setFuncionariosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+    setFuncionariosSelecionados(prev => prev.filter((_, i) => i !== idx));
+  };
+  const removeProjetoDropdown = (idx: number) => {
+    setProjetosDropdowns(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+    setProjetosSelecionados(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -182,79 +214,85 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Status:</Text>
           <View style={styles.opcoesFiltro}>
-            {SECOES.map(s => (
-              <Pressable
-                key={s}
-                onPress={() => toggleStatus(s)}
-                style={[
-                  styles.containerOpcao,
-                  statusSelecionados.includes(s) && styles.filtroSelecionado,
-                ]}
-              >
-                <Text
-                  style={
-                    statusSelecionados.includes(s)
-                      ? styles.textoFiltroSelecionado
-                      : styles.textoOpcao
-                  }
+            {SECOES.map(s => {
+              const selected = statusSelecionados.includes(s);
+              return (
+                <Pressable
+                  key={s}
+                  onPress={() => toggleStatus(s)}
+                  style={[
+                    styles.containerOpcao,
+                    { backgroundColor: selected ? selectedBg : statusStyles[s].backgroundColor, borderRadius: 20, borderWidth: 1, borderColor: statusStyles[s].backgroundColor },
+                  ]}
                 >
-                  {s}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={
+                      selected
+                        ? { ...styles.textoFiltroSelecionado, color: selectedColor } 
+                        : { ...styles.textoOpcao, color: statusStyles[s].color }
+                    }
+                  >
+                    {s}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
-        {/* Funcionários com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Funcionários:</Text>
           <View>
-            {funcionariosDropdowns.map((_, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Picker
-                  selectedValue={funcionariosSelecionados[idx] ?? ''}
-                  style={{ width: 180, height: 40 }}
-                  onValueChange={value => setFuncionarioSelecionado(idx, value)}
-                >
-                  <Picker.Item label="Selecione" value="" />
-                  {usuarios.map(u => (
-                    <Picker.Item key={u.userId} label={u.name} value={u.userId} />
-                  ))}
-                </Picker>
-                <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
-                </Pressable>
-              </View>
-            ))}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+
+              {funcionariosDropdowns.map((_, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Picker
+                    selectedValue={funcionariosSelecionados[idx] ?? ''}
+                    style={styles.selecaoFiltro}
+                    onValueChange={value => setFuncionarioSelecionado(idx, value)}
+                  >
+                    <Picker.Item label="Selecione" value="" />
+                    {usuarios.map(u => (
+                      <Picker.Item key={u.userId} label={u.name} value={u.userId} />
+                    ))}
+                  </Picker>
+                  <Pressable onPress={() => removeFuncionarioDropdown(idx)} style={{ marginLeft: 8 }}>
+                    <Ionicons name="remove-circle-outline" size={24} color="red" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={addFuncionarioDropdown} style={{ marginTop: 4 }}>
-              <Text style={{ color: 'blue' }}>+ Adicionar Funcionário</Text>
+              <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Funcionário</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Projetos com múltiplos dropdowns */}
         <View style={styles.conjuntoFiltros}>
           <Text style={styles.filtroTexto}>Projetos:</Text>
           <View>
-            {projetosDropdowns.map((_, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Picker
-                  selectedValue={projetosSelecionados[idx] ?? ''}
-                  style={{ width: 180, height: 40 }}
-                  onValueChange={value => setProjetoSelecionado(idx, value)}
-                >
-                  <Picker.Item label="Selecione" value="" />
-                  {projetos.map(p => (
-                    <Picker.Item key={p.projetoId} label={p.nome} value={p.projetoId} />
-                  ))}
-                </Picker>
-                <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>-</Text>
-                </Pressable>
-              </View>
-            ))}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {projetosDropdowns.map((_, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <Picker
+                    selectedValue={projetosSelecionados[idx] ?? ''}
+                    style={styles.selecaoFiltro}
+                    onValueChange={value => setProjetoSelecionado(idx, value)}
+                  >
+                    <Picker.Item label="Selecione" value="" />
+                    {projetos.map(p => (
+                      <Picker.Item key={p.projetoId} label={p.nome} value={p.projetoId} />
+                    ))}
+                  </Picker>
+                  <Pressable onPress={() => removeProjetoDropdown(idx)} style={{ marginLeft: 8 }}>
+                    <Ionicons name="remove-circle-outline" size={24} color="red" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={addProjetoDropdown} style={{ marginTop: 4 }}>
-              <Text style={{ color: 'blue' }}>+ Adicionar Projeto</Text>
+              <Text style={styles.botaoAdicionarFiltro}>+ Adicionar Projeto</Text>
             </Pressable>
           </View>
         </View>
@@ -278,6 +316,7 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                 comprovante:
                   'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
               }));
+
               return (
                 <Card
                   key={p._id}
@@ -290,13 +329,12 @@ const ListaDespesas: React.FC<ListaDespesasProps> = ({ filtro, setTitulo, setSho
                     setMostrarPacote(prev => ({
                       ...prev,
                       [p._id]: !prev[p._id],
-                    }))
-                  }
+                    }))}
                   onAprovacaoChange={fetchData}
-                  comprovante={''}
                 />
               );
             })}
+
           </View>
         );
       })}
