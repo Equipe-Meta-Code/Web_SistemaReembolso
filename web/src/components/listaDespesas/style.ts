@@ -37,11 +37,16 @@ export default StyleSheet.create({
   },
   cardItem: {
     marginBottom: 16,
-    padding: 8,
+    padding: 10,
+    paddingBottom: 20,
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 10,
     backgroundColor: '#fdfdfd',
+    gap: 10,
+    alignItems: 'flex-start',
+    textAlign: 'left',
+    height: 'auto',
   },
   cell: {
     flex: 1,

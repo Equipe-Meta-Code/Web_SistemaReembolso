@@ -45,7 +45,7 @@ type StatusKey = keyof typeof statusColors;
 type Approval = 'Aprovado' | 'Recusado' | 'Pendente';
 
 interface Pacote { _id: string; pacoteId: number; nome: string; status: string; }
-interface Despesa { _id: string; data: string; valor_gasto: number; descricao: string; aprovacao: string; categoria: string; comprovante?: string; }
+interface Despesa { _id: string; data: string; valor_gasto: number; descricao: string; aprovacao: string; categoria: string; comprovante?: string; despesaId: number; }
 interface Projeto { nome: string; }
 interface Usuario { name: string; }
 
@@ -60,7 +60,7 @@ interface CardProps {
 }
 
 const Label: React.FC<{ text: string; color: { bg: string; text: string }; customized?: boolean }> = ({ text, color, customized = false }) => (
-  <View style={[styles.labelContainer, { backgroundColor: color.bg, flexDirection: 'row', alignItems: 'center' }]}>  
+  <View style={[styles.labelContainer, { backgroundColor: color.bg, flexDirection: 'row', alignItems: 'center' }]}>
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
     {customized && <View style={styles.customBadge} />}
   </View>
@@ -132,8 +132,12 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
     }
   };
 
+  const exibirComprovante = (despesaId: number) => {
+    Linking.openURL(`http://localhost:3333/comprovantes/expense/${despesaId}`);
+  };
+
   return (
-    <View style={[styles.wrapper, { overflow: 'visible' }]}>       
+    <View style={[styles.wrapper, { overflow: 'visible' }]}>
       <TouchableOpacity style={styles.header} onPress={alternarVisibilidade} activeOpacity={0.7}>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -172,7 +176,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
       </TouchableOpacity>
 
       {visivel && (
-        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>   
+        <View style={[isWide ? styles.tableContainer : styles.cardContainer, { overflow: 'visible' }]}>
           {isWide && (
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.cell, styles.categoria]}>CATEGORIA</Text>
@@ -202,7 +206,7 @@ export default function Card({ pacote, despesas, projeto, usuario, visivel, alte
                 <Text style={[styles.cell, styles.valor]}>R$ {d.valor_gasto.toFixed(2)}</Text>
                 <Text style={[styles.cell, styles.descricao]}>{d.descricao}</Text>
                 <View style={[styles.cell, styles.comprovante]}>
-                  <TouchableOpacity style={styles.comprovanteButton} onPress={() => d.comprovante && Linking.openURL(d.comprovante)}>
+                  <TouchableOpacity style={styles.comprovanteButton} onPress={() => exibirComprovante(d.despesaId)}>
                     <Text style={styles.comprovanteButtonText}>Exibir Comprovante</Text>
                   </TouchableOpacity>
                 </View>

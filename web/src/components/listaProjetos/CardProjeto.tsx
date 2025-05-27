@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import styles from './style';
 import { Projeto } from '../../types/Projeto';
+import api from '../../services/api';
 
-const categoriaCoresFundo: Record<string, string> = { 
+const categoriaCoresFundo: Record<string, string> = {
   'Alimentação': 'rgba(234, 234, 255, 0.8)',
   'Hospedagem': 'rgba(3, 46, 31, 0.07)',
   'Transporte': 'rgba(52, 163, 238, 0.1)',
@@ -18,7 +21,7 @@ const categoriaCoresFundo: Record<string, string> = {
   'Outros': 'rgba(97, 97, 97, 0.1)',
 };
 
-const categoriaCoresTexto: Record<string, string> = { 
+const categoriaCoresTexto: Record<string, string> = {
   'Alimentação': 'rgba(58, 8, 196, 0.63)',
   'Hospedagem': 'rgba(6, 58, 40, 0.65)',
   'Transporte': 'rgba(19, 75, 165, 0.67)',
@@ -27,14 +30,25 @@ const categoriaCoresTexto: Record<string, string> = {
   'Outros': 'rgba(54, 52, 52, 0.5)',
 };
 
+interface Funcionario {
+  _id: string;
+  name: string;
+  userId: number;
+}
+
 interface CardProps {
   projeto: Projeto;
   visivel: boolean;
   alternarVisibilidade: () => void;
+  encerrado?: boolean;
+  onProjetoAtualizado: () => void;
 }
 
-const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({ text, color }) => (
-  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>
+const Label: React.FC<{ text: string; color: { bg: string; text: string } }> = ({
+  text,
+  color,
+}) => (
+  <View style={[styles.labelContainer, { backgroundColor: color.bg }]}>  
     <Text style={[styles.labelText, { color: color.text }]}>{text}</Text>
   </View>
 );
@@ -43,22 +57,96 @@ export default function CardProjeto({
   projeto,
   visivel,
   alternarVisibilidade,
+  encerrado,
+  onProjetoAtualizado,
 }: CardProps) {
   const { width } = useWindowDimensions();
   const isWide = width >= 1220;
 
   const [verDepartamentos, setVerDepartamentos] = useState(false);
   const [verFuncionarios, setVerFuncionarios] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [todosFuncionarios, setTodosFuncionarios] = useState<Funcionario[]>([]);
+  const [selectedFunc, setSelectedFunc] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  // Busca todos os usuários
+  useEffect(() => {
+    api
+      .get('/userList')
+      .then(res => setTodosFuncionarios(res.data.users))
+      .catch(err => console.error('Erro ao buscar funcionários:', err));
+  }, []);
+
+  // Filtra usuários que ainda não estão no projeto
+  const funcionariosDisponiveis = todosFuncionarios.filter(
+    u => !projeto.funcionarios.some(pf => pf.userId === u.userId)
+  );
+
+  const adicionarFuncionario = async () => {
+    if (!selectedFunc) {
+      Alert.alert('Erro', 'Selecione um funcionário.');
+      return;
+    }
+    try {
+      setSaving(true);
+      const response = await api.put(
+        `/projeto/${projeto.projetoId}/funcionarios/adicionar`,
+        { funcionarioId: selectedFunc }
+      );
+      setSaving(false);
+      if (response.status >= 200 && response.status < 300) {
+        Alert.alert('Sucesso', 'Funcionário adicionado!');
+        setShowAdd(false);
+        setSelectedFunc('');
+        onProjetoAtualizado();
+      } else {
+        Alert.alert('Erro', 'Falha ao adicionar funcionário.');
+      }
+    } catch (error) {
+      setSaving(false);
+      Alert.alert('Erro', 'Falha ao adicionar funcionário.');
+      console.error('Erro ao adicionar funcionário:', error);
+    }
+  };
+
+  const encerrarProjeto = async () => {
+    const confirmar = window.confirm(
+      `Deseja realmente encerrar o projeto "${projeto.nome}"?`
+    );
+    if (!confirmar) return;
+
+    try {
+      setLoading(true);
+      const response = await api.put(
+        `/projeto/${projeto.projetoId}/encerrar`
+      );
+      setLoading(false);
+      if (response.status >= 200 && response.status < 300) {
+        window.alert('Projeto encerrado com sucesso!');
+        onProjetoAtualizado();
+      } else {
+        window.alert('Falha ao encerrar o projeto.');
+      }
+    } catch (error) {
+      setLoading(false);
+      window.alert('Falha ao encerrar o projeto.');
+      console.error('Erro ao encerrar projeto:', error);
+    }
+  };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, encerrado && { opacity: 0.5 }]}>      
       <TouchableOpacity
         style={styles.header}
         onPress={alternarVisibilidade}
         activeOpacity={0.7}
       >
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+          >
             <Text style={styles.title}>{projeto.nome}</Text>
             <Ionicons
               name={visivel ? 'chevron-up-outline' : 'chevron-down-outline'}
@@ -89,10 +177,17 @@ export default function CardProjeto({
             const bg = categoriaCoresFundo[cat.nome] || 'rgba(229, 231, 255, 1)';
             const text = categoriaCoresTexto[cat.nome] || 'rgba(76, 77, 220, 1)';
             return (
-              <View key={cat._id} style={[styles.cardItem, { marginBottom: 8 }]}>
+              <View
+                key={cat._id}
+                style={[styles.cardItem, { marginBottom: 8 }]}
+              >
                 <Label text={cat.nome} color={{ bg, text }} />
                 <Text style={styles.subtitle}>
-                  Valor máximo: R$ {cat.valor_maximo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  Valor máximo: R${' '}
+                  {cat.valor_maximo.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
             );
@@ -105,7 +200,11 @@ export default function CardProjeto({
           >
             <Text style={styles.tituloSecao}>Departamentos</Text>
             <Ionicons
-              name={verDepartamentos ? 'chevron-up-outline' : 'chevron-down-outline'}
+              name={
+                verDepartamentos
+                  ? 'chevron-up-outline'
+                  : 'chevron-down-outline'
+              }
               size={20}
               color="#555"
               style={{ marginLeft: 4 }}
@@ -114,7 +213,7 @@ export default function CardProjeto({
           {verDepartamentos && (
             <View style={{ marginBottom: 12 }}>
               {projeto.departamentos.map(dep => (
-                <View key={dep._id} style={styles.cardItem}>
+                <View key={dep._id} style={styles.cardItem}>     
                   <Text style={styles.subtitle}>• {dep.nome}</Text>
                 </View>
               ))}
@@ -128,9 +227,13 @@ export default function CardProjeto({
           >
             <Text style={styles.tituloSecao}>Funcionários</Text>
             <Ionicons
-              name={verFuncionarios ? 'chevron-up-outline' : 'chevron-down-outline'}
+              name={
+                verFuncionarios
+                  ? 'chevron-up-outline'
+                  : 'chevron-down-outline'
+              }
               size={20}
-              color="#555"
+              color="gray"
               style={{ marginLeft: 4 }}
             />
           </TouchableOpacity>
@@ -142,6 +245,81 @@ export default function CardProjeto({
                 </View>
               ))}
             </View>
+          )}
+
+          {/* Adicionar Funcionário */}
+          {!encerrado && (
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, flexWrap: 'wrap', columnGap: 12, rowGap: 20,  }}
+            >
+              <TouchableOpacity
+                onPress={() => setShowAdd(!showAdd)}
+                style={{ padding: 10, backgroundColor: 'rgb(31, 72, 170)', borderRadius: 6 }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                  Adicionar Funcionário
+                </Text>
+              </TouchableOpacity>
+              {showAdd && (
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8}}
+                >
+                  <Picker
+                    selectedValue={selectedFunc}
+                    style={{ height: 40, width: 180, borderRadius: 8 }}
+                    onValueChange={value => setSelectedFunc(value)}
+                  >
+                    <Picker.Item label="Selecione" value="" />
+                    {funcionariosDisponiveis.length > 0
+                      ? funcionariosDisponiveis.map(f => (
+                          <Picker.Item
+                            key={f._id}
+                            label={f.name}
+                            value={f._id}
+                          />
+                        ))
+                      : (
+                          <Picker.Item
+                            label="Nenhum funcionário disponível"
+                            value=""
+                          />
+                        )}
+                  </Picker>
+                  <TouchableOpacity
+                    onPress={adicionarFuncionario}
+                    style={{
+                      padding: 10,
+                      backgroundColor: '#28a745',
+                      borderRadius: 6,
+                    }}
+                    disabled={saving}
+                  >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                      {saving ? 'Salvando...' : 'Salvar'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Encerrar Projeto */}
+          {!encerrado && (
+            <TouchableOpacity
+              onPress={encerrarProjeto}
+              style={{
+                marginTop: 12,
+                paddingVertical: 10,
+                backgroundColor: '#555',
+                borderRadius: 6,
+                alignItems: 'center',
+              }}
+              disabled={loading}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                {loading ? 'Encerrando...' : 'Encerrar Projeto'}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       )}
